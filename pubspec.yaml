@@ -1,6 +1,6 @@
 name: mcp_analysis
 description: Analysis engine for the MCP ecosystem providing pipeline-based data analysis with pluggable functions, transforms, and multi-source data integration.
-version: 0.1.0
+version: 0.1.1
 homepage: https://app-appplayer.github.io/makemind
 repository: https://github.com/app-appplayer/mcp_analysis
 issue_tracker: https://github.com/app-appplayer/mcp_analysis/issues
@@ -16,7 +16,7 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
-  mcp_bundle: ^0.3.0
+  mcp_bundle: ^0.4.0
   collection: ^1.18.0
   meta: ^1.9.0
 
