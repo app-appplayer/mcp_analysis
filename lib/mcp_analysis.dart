@@ -61,6 +61,7 @@ export 'src/feat/function/builtin/stats_extended.dart';
 export 'src/feat/function/builtin/dsp_advanced.dart';
 export 'src/feat/function/builtin/multivariate.dart';
 export 'src/feat/function/builtin/kalman.dart';
+export 'src/feat/function/builtin/lockin.dart';
 export 'src/feat/domain/domain_builtin.dart';
 
 // FEAT - Alert

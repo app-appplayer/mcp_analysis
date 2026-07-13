@@ -1,3 +1,14 @@
+## 0.1.3 - 2026-07-14 - Filter completion, lock-in, model simulation
+
+### Added
+- `digital_filter`: notch, Butterworth order cascade (2..8), median — filter
+  family completion.
+- `lockin` — software lock-in amplifier (synchronous demodulation) for weak
+  tone amplitude/phase extraction (36 built-in functions).
+- Synthetic source model kinds `state_space` / `transfer_function` / `rlc`
+  (RK4, ZOH input) and Monte Carlo `ensemble` percentile bands — in-core
+  linear system simulation and simulation-based prediction.
+
 ## 0.1.2 - 2026-07-14 - Standard function catalog + streaming semantics + performance
 
 ### Added

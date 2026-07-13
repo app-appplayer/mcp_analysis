@@ -39,13 +39,14 @@ void main() {
     PcaFunction(),
     LombScargleFunction(),
     KalmanFilterFunction(),
+    LockinFunction(),
     VibrationIndicatorsFunction(),
     HrvMetricsFunction(),
     EegBandPowersFunction(),
   ];
 
-  test('catalog size matches the documented inventory (35)', () {
-    expect(catalog.length, 35);
+  test('catalog size matches the documented inventory (36)', () {
+    expect(catalog.length, 36);
   });
 
   test('every builtin exposes a well-formed, self-consistent schema', () {

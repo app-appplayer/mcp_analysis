@@ -31,7 +31,9 @@ class DigitalFilterFunction implements AnalysisFunction {
             name: 'type',
             type: 'string',
             defaultValue: 'lowpass',
-            description: 'lowpass | highpass | bandpass | moving_average',
+            description:
+                'lowpass | highpass | bandpass | notch | moving_average | '
+                'median',
           ),
           'sampleRate': AnalysisParameterSchema(
             name: 'sampleRate',
@@ -54,7 +56,15 @@ class DigitalFilterFunction implements AnalysisFunction {
             name: 'taps',
             type: 'number',
             defaultValue: 5,
-            description: 'moving_average window length',
+            description: 'moving_average / median window length',
+          ),
+          'order': AnalysisParameterSchema(
+            name: 'order',
+            type: 'number',
+            defaultValue: 2,
+            description:
+                'Butterworth order for lowpass/highpass (even, 2..8) — '
+                'cascaded biquad sections with Butterworth pole-pair Q',
           ),
           'zeroPhase': AnalysisParameterSchema(
             name: 'zeroPhase',
@@ -81,6 +91,9 @@ class DigitalFilterFunction implements AnalysisFunction {
     if (type == 'moving_average') {
       final taps = math.max(1, (parameters['taps'] as num?)?.toInt() ?? 5);
       out = _movingAverage(signal, taps);
+    } else if (type == 'median') {
+      final taps = math.max(1, (parameters['taps'] as num?)?.toInt() ?? 5);
+      out = _median(signal, taps);
     } else {
       final fs = (parameters['sampleRate'] as num?)?.toDouble();
       final cutoff = (parameters['cutoff'] as num?)?.toDouble();
@@ -93,10 +106,30 @@ class DigitalFilterFunction implements AnalysisFunction {
             'cutoff ($cutoff Hz) must be below Nyquist (${fs / 2} Hz)');
       }
       final q = (parameters['q'] as num?)?.toDouble() ?? 0.7071;
-      final c = _BiquadCoeffs.rbj(type, fs, cutoff, q);
-      out = _biquad(signal, c);
+      final order =
+          ((parameters['order'] as num?)?.toInt() ?? 2).clamp(2, 8);
+      final sections = <_BiquadCoeffs>[];
+      if ((type == 'lowpass' || type == 'highpass') && order > 2) {
+        // Butterworth N-th order = cascaded 2nd-order sections whose Qs
+        // follow the Butterworth pole pairs: Q_k = 1/(2·sin((2k+1)π/2N)).
+        final n = order.isEven ? order : order + 1;
+        for (var k = 0; k < n ~/ 2; k++) {
+          final qk = 1 / (2 * math.sin((2 * k + 1) * math.pi / (2 * n)));
+          sections.add(_BiquadCoeffs.rbj(type, fs, cutoff, qk));
+        }
+      } else {
+        sections.add(_BiquadCoeffs.rbj(type, fs, cutoff, q));
+      }
+      out = signal;
+      for (final c in sections) {
+        out = _biquad(out, c);
+      }
       if (zeroPhase) {
-        out = _biquad(out.reversed.toList(), c).reversed.toList();
+        out = out.reversed.toList();
+        for (final c in sections) {
+          out = _biquad(out, c);
+        }
+        out = out.reversed.toList();
       }
     }
 
@@ -121,6 +154,18 @@ class DigitalFilterFunction implements AnalysisFunction {
       out[i] = sum / math.min(i + 1, taps);
     }
     return out;
+  }
+
+  List<double> _median(List<double> x, int taps) {
+    final half = taps ~/ 2;
+    return List<double>.generate(x.length, (i) {
+      final lo = math.max(0, i - half);
+      final hi = math.min(x.length, i + half + 1);
+      final w = x.sublist(lo, hi)..sort();
+      return w.length.isOdd
+          ? w[w.length ~/ 2]
+          : (w[w.length ~/ 2 - 1] + w[w.length ~/ 2]) / 2;
+    });
   }
 
   List<double> _biquad(List<double> x, _BiquadCoeffs c) {
@@ -158,6 +203,11 @@ class _BiquadCoeffs {
         b0 = alpha;
         b1 = 0;
         b2 = -alpha;
+        break;
+      case 'notch':
+        b0 = 1;
+        b1 = -2 * cosW0;
+        b2 = 1;
         break;
       case 'lowpass':
       default:
