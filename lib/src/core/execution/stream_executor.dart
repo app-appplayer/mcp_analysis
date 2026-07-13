@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:mcp_bundle/ports.dart';
 
 import '../../feat/alert/alert_evaluator.dart';
+import '../../feat/alert/reorder_buffer.dart';
 import '../../feat/alert/window_aggregator.dart';
 import '../../feat/datasource/datasource_registry.dart';
 import '../../feat/transform/transform_pipeline.dart';
@@ -56,7 +57,26 @@ class StreamExecutor {
     final emitInterval = _parseDuration(
       resolvedParams['emitInterval'] as String? ?? '1m',
     );
-    final windowAggregator = WindowAggregator(windowSize: windowSize);
+    // Streaming-semantics knobs (all optional; defaults preserve the
+    // original behavior):
+    // - windowKind: 'sliding' (default) | 'tumbling'
+    // - maxWindowPoints: bounded-buffer cap (int)
+    // - allowedLateness: e.g. '10s' — enables watermark reordering so
+    //   out-of-order arrivals within that span are re-sequenced instead of
+    //   degrading window membership.
+    final windowKind = (resolvedParams['windowKind'] as String?) == 'tumbling'
+        ? WindowKind.tumbling
+        : WindowKind.sliding;
+    final maxWindowPoints = (resolvedParams['maxWindowPoints'] as num?)?.toInt();
+    final allowedLatenessSpec = resolvedParams['allowedLateness'] as String?;
+    final reorder = allowedLatenessSpec == null
+        ? null
+        : ReorderBuffer(allowedLateness: _parseDuration(allowedLatenessSpec));
+    final windowAggregator = WindowAggregator(
+      windowSize: windowSize,
+      kind: windowKind,
+      maxPoints: maxWindowPoints,
+    );
 
     try {
       // Subscribe to data stream
@@ -99,7 +119,9 @@ class StreamExecutor {
         (dataSet) async {
           if (isCanceled) return;
 
-          // Add points to window
+          // Add points to window — through the reorder buffer when
+          // `allowedLateness` is configured (restores event-time order for
+          // out-of-order arrivals), directly otherwise.
           for (final row in dataSet.rows) {
             final timestamp =
                 row['_timestamp'] is DateTime
@@ -109,10 +131,14 @@ class StreamExecutor {
               (v) => v is num,
               orElse: () => 0.0,
             );
-            windowAggregator.add(AnalysisTimePoint(
-              t: timestamp,
-              v: value,
-            ));
+            final point = AnalysisTimePoint(t: timestamp, v: value);
+            if (reorder == null) {
+              windowAggregator.add(point);
+            } else {
+              for (final released in reorder.add(point)) {
+                windowAggregator.add(released);
+              }
+            }
           }
 
           // Apply transforms on window data
@@ -183,6 +209,11 @@ class StreamExecutor {
         },
         onDone: () async {
           emitTimer?.cancel();
+          if (reorder != null) {
+            for (final released in reorder.flush()) {
+              windowAggregator.add(released);
+            }
+          }
           if (!completer.isCompleted) {
             // Merge locally tracked errors with errors accumulated via addError()
             final currentJob = await _jobManager.getJob(job.jobId);
@@ -252,6 +283,8 @@ class StreamExecutor {
       functionResults: {
         'windowState': aggregator.state,
         'pointCount': aggregator.state.pointCount,
+        'lateDropped': aggregator.lateDropped,
+        'overflowDropped': aggregator.overflowDropped,
       },
       provenance: provenance,
     );

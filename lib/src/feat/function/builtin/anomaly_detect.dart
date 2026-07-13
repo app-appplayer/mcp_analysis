@@ -15,7 +15,7 @@ class AnomalyDetectFunction implements AnalysisFunction {
             name: 'method',
             type: 'string',
             defaultValue: 'threshold',
-            description: 'Detection method: threshold, zscore, iqr, ewma',
+            description: 'Detection method: threshold, zscore, iqr, ewma, mad',
           ),
           'column': AnalysisParameterSchema(
             name: 'column',
@@ -134,6 +134,33 @@ class AnomalyDetectFunction implements AnalysisFunction {
               'score': values[i] > upper
                   ? values[i] - upper
                   : lower - values[i],
+            });
+          }
+        }
+
+      case 'mad':
+        // Median absolute deviation — robust z-score (0.6745·|x−med|/MAD),
+        // immune to the outliers it hunts (unlike mean/std in zscore).
+        final sensitivity =
+            (parameters['sensitivity'] as num?)?.toDouble() ?? 3.5;
+        if (values.length < 2) break;
+        final sortedForMedian = List<double>.from(values)..sort();
+        double medianOf(List<double> xs) => xs.length.isOdd
+            ? xs[xs.length ~/ 2]
+            : (xs[xs.length ~/ 2 - 1] + xs[xs.length ~/ 2]) / 2;
+        final median = medianOf(sortedForMedian);
+        final deviations =
+            values.map((v) => (v - median).abs()).toList()..sort();
+        final mad = medianOf(deviations);
+        if (mad == 0) break;
+
+        for (var i = 0; i < values.length; i++) {
+          final score = 0.6745 * (values[i] - median).abs() / mad;
+          if (score > sensitivity) {
+            anomalies.add({
+              'index': i,
+              'value': values[i],
+              'score': score,
             });
           }
         }

@@ -74,12 +74,36 @@ class DescriptiveStatsFunction implements AnalysisFunction {
         std = math.sqrt(variance);
       }
 
+      // Higher moments — skewness (Fisher g1) and kurtosis (Pearson,
+      // normal ≈ 3): the vibration-indicator staples (impulsive bearing
+      // faults drive kurtosis > 3).
+      double skewness = 0.0;
+      double kurtosis = 0.0;
+      if (count > 2 && std > 0) {
+        var m3 = 0.0, m4 = 0.0;
+        for (final v in values) {
+          final d = v - avg;
+          m3 += d * d * d;
+          m4 += d * d * d * d;
+        }
+        m3 /= count;
+        m4 /= count;
+        final s2 = values
+                .map((v) => (v - avg) * (v - avg))
+                .reduce((a, b) => a + b) /
+            count; // population variance for moment ratios
+        skewness = m3 / math.pow(s2, 1.5);
+        kurtosis = m4 / (s2 * s2);
+      }
+
       final stats = <String, dynamic>{
         'count': count,
         'min': minVal,
         'max': maxVal,
         'avg': avg,
         'std': std,
+        'skewness': skewness,
+        'kurtosis': kurtosis,
       };
 
       // Percentiles
