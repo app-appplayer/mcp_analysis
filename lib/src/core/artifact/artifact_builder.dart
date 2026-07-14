@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:mcp_bundle/ports.dart';
 
 /// Constructs typed artifact instances from analysis function results.
@@ -305,11 +307,14 @@ class ArtifactBuilder {
               tags: tags,
             ));
           case AnalysisArtifactType.summary:
+            // A summary without a 'text' convention key carries the whole
+            // function-results map as JSON — otherwise rich results (fft,
+            // lockin, ...) would be unreachable through the port surface.
             artifacts.add(buildSummary(
               jobId: jobId,
               name: outputDef.name,
               text: resultData is Map
-                  ? (resultData['text'] as String? ?? '')
+                  ? (resultData['text'] as String? ?? jsonEncode(resultData))
                   : resultData?.toString() ?? '',
               provenance: provenance,
               tags: tags,

@@ -1,3 +1,17 @@
+## 0.1.4 - 2026-07-14 - Standard in-memory builder
+
+### Added
+- `AnalysisPortAdapter.inMemory()` — one-line production engine builder
+  (full catalog + `synthetic` source), closing the standard-builder gap the
+  other capability packages already meet.
+- `standardBuiltinFunctions()` — single source of the built-in catalog.
+- `dataSourceRegistry` getter for post-construction adapter registration.
+
+### Fixed
+- Summary artifacts now carry the full function-results map as JSON when no
+  'text' key is present — rich results (fft, lockin, ...) were unreachable
+  through the port artifact surface.
+
 ## 0.1.3 - 2026-07-14 - Filter completion, lock-in, model simulation
 
 ### Added
