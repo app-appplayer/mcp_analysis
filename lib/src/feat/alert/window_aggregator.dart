@@ -5,12 +5,6 @@ import 'package:mcp_bundle/ports.dart';
 
 /// Current state of the sliding window.
 class WindowState {
-  final Duration windowSize;
-  final List<AnalysisTimePoint> points;
-  final DateTime? windowStart;
-  final DateTime? windowEnd;
-  final int pointCount;
-
   const WindowState({
     required this.windowSize,
     required this.points,
@@ -18,6 +12,11 @@ class WindowState {
     this.windowEnd,
     required this.pointCount,
   });
+  final Duration windowSize;
+  final List<AnalysisTimePoint> points;
+  final DateTime? windowStart;
+  final DateTime? windowEnd;
+  final int pointCount;
 }
 
 /// Windowing discipline for streaming aggregation.
@@ -66,6 +65,11 @@ enum WindowKind {
 ///   evicted immediately and counted in [overflowDropped], keeping memory
 ///   at rate-independent O(maxPoints).
 class WindowAggregator {
+  WindowAggregator({
+    required this.windowSize,
+    this.kind = WindowKind.sliding,
+    this.maxPoints,
+  });
   final Duration windowSize;
 
   /// Sliding (continuous eviction) or tumbling (interval reset).
@@ -105,18 +109,11 @@ class WindowAggregator {
   final Queue<_SeqValue> _minDeque = Queue<_SeqValue>();
   final Queue<_SeqValue> _maxDeque = Queue<_SeqValue>();
 
-  WindowAggregator({
-    required this.windowSize,
-    this.kind = WindowKind.sliding,
-    this.maxPoints,
-  });
-
   int get _count => _points.length - _head;
 
   /// Add a data point to the window. Evicts expired points.
   void add(AnalysisTimePoint point) {
-    final maxT =
-        (_maxT == null || point.t.isAfter(_maxT!)) ? point.t : _maxT!;
+    final maxT = (_maxT == null || point.t.isAfter(_maxT!)) ? point.t : _maxT!;
     _maxT = maxT;
 
     if (kind == WindowKind.tumbling) {
@@ -202,8 +199,7 @@ class WindowAggregator {
       case 'std':
         if (n < 2) return 0.0;
         final mean = _sum / n;
-        final variance =
-            math.max(0.0, (_sumSq - n * mean * mean) / (n - 1));
+        final variance = math.max(0.0, (_sumSq - n * mean * mean) / (n - 1));
         return math.sqrt(variance);
       default:
         return 0.0;
@@ -294,7 +290,7 @@ class WindowAggregator {
 }
 
 class _SeqValue {
+  const _SeqValue(this.seq, this.value);
   final int seq;
   final double value;
-  const _SeqValue(this.seq, this.value);
 }

@@ -6,13 +6,12 @@ import 'datasource_registry.dart';
 
 /// Bridges analysis data source interface to mcp_io telemetry.
 class IoSourceAdapter extends DataSourceAdapter with StreamableDataSource {
-  final IoStreamPort _ioStreamPort;
-  final Duration queryTimeout;
-
   IoSourceAdapter({
     required IoStreamPort ioStreamPort,
     this.queryTimeout = const Duration(seconds: 30),
   }) : _ioStreamPort = ioStreamPort;
+  final IoStreamPort _ioStreamPort;
+  final Duration queryTimeout;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.mcpIo;
@@ -47,8 +46,7 @@ class IoSourceAdapter extends DataSourceAdapter with StreamableDataSource {
             'value': envelope.payload.value is num
                 ? (envelope.payload.value as num).toDouble()
                 : envelope.payload.value,
-            if (envelope.payload.unit != null)
-              '_unit': envelope.payload.unit,
+            if (envelope.payload.unit != null) '_unit': envelope.payload.unit,
             '_quality': envelope.payload.quality.name,
           });
         },
@@ -142,8 +140,7 @@ class IoSourceAdapter extends DataSourceAdapter with StreamableDataSource {
               'value': envelope.payload.value is num
                   ? (envelope.payload.value as num).toDouble()
                   : envelope.payload.value,
-              if (envelope.payload.unit != null)
-                '_unit': envelope.payload.unit,
+              if (envelope.payload.unit != null) '_unit': envelope.payload.unit,
               '_quality': envelope.payload.quality.name,
             };
             controller.add(AnalysisDataSet(
@@ -181,7 +178,7 @@ class IoSourceAdapter extends DataSourceAdapter with StreamableDataSource {
             ));
           }
         }
-        controller.close();
+        await controller.close();
       }
     }();
 
@@ -226,13 +223,12 @@ class IoSourceAdapter extends DataSourceAdapter with StreamableDataSource {
 }
 
 class _IoUriParts {
-  final String deviceId;
-  final String metric;
-  final String topic;
-
   const _IoUriParts({
     required this.deviceId,
     required this.metric,
     required this.topic,
   });
+  final String deviceId;
+  final String metric;
+  final String topic;
 }

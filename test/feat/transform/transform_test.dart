@@ -652,8 +652,7 @@ void main() {
       // Column names should be preserved
       expect(outputSchema.length, equals(testColumns.length));
       // Temperature column unit should be updated to 'C'
-      final tempCol =
-          outputSchema.firstWhere((c) => c.name == 'temperature');
+      final tempCol = outputSchema.firstWhere((c) => c.name == 'temperature');
       expect(tempCol.unit, equals('C'));
     });
   });
@@ -669,7 +668,11 @@ void main() {
       final ds = AnalysisDataSet(
         columns: testColumns,
         rows: [
-          {'_timestamp': DateTime(2024, 1, 1), 'temperature': 70.0, 'status': 'active'},
+          {
+            '_timestamp': DateTime(2024, 1, 1),
+            'temperature': 70.0,
+            'status': 'active'
+          },
         ],
         rowCount: 1,
       );
@@ -760,7 +763,8 @@ void main() {
       filter = FilterTransform();
     });
 
-    test('TC-040: isNotNull operator filters rows with non-null values', () async {
+    test('TC-040: isNotNull operator filters rows with non-null values',
+        () async {
       final result = await filter.apply(testDataSet, {
         'column': 'temperature',
         'operator': 'isNotNull',
@@ -786,7 +790,8 @@ void main() {
       }
     });
 
-    test('TC-042: notIn operator filters rows with values not in list', () async {
+    test('TC-042: notIn operator filters rows with values not in list',
+        () async {
       final result = await filter.apply(testDataSet, {
         'column': 'status',
         'operator': 'notIn',
@@ -862,7 +867,8 @@ void main() {
   group('FillnaTransform interpolate', () {
     late FillnaTransform fillna;
 
-    test('TC-050: interpolate fills null with average of prev and next', () async {
+    test('TC-050: interpolate fills null with average of prev and next',
+        () async {
       fillna = FillnaTransform();
       final result = await fillna.apply(testDataSet, {
         'column': 'temperature',
@@ -970,7 +976,8 @@ void main() {
       expect(result.rows[0]['temperature'], equals(72.0));
     });
 
-    test('TC-059: resamples with unknown aggregation defaults to mean', () async {
+    test('TC-059: resamples with unknown aggregation defaults to mean',
+        () async {
       final result = await resample.apply(testDataSet, {
         'interval': '5m',
         'aggregation': 'unknown_agg',
@@ -981,7 +988,8 @@ void main() {
       expect(result.rows[0]['temperature'], closeTo(77.875, 0.01));
     });
 
-    test('TC-060: resamples with no timestamp column returns input unchanged', () async {
+    test('TC-060: resamples with no timestamp column returns input unchanged',
+        () async {
       final noTsDs = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: 'value', type: 'double'),
@@ -1032,8 +1040,14 @@ void main() {
       final result = await join.apply(leftDs, {
         'method': 'nearest',
         'rightData': <Map<String, dynamic>>[
-          {'_timestamp': now.add(const Duration(minutes: 1)), 'pressure': 1013.0},
-          {'_timestamp': now.add(const Duration(minutes: 4)), 'pressure': 1015.0},
+          {
+            '_timestamp': now.add(const Duration(minutes: 1)),
+            'pressure': 1013.0
+          },
+          {
+            '_timestamp': now.add(const Duration(minutes: 4)),
+            'pressure': 1015.0
+          },
         ],
       });
 
@@ -1052,7 +1066,10 @@ void main() {
         'method': 'exact',
         'rightData': <Map<String, dynamic>>[
           {'_timestamp': now, 'pressure': 1013.0},
-          {'_timestamp': now.add(const Duration(minutes: 3)), 'pressure': 1015.0},
+          {
+            '_timestamp': now.add(const Duration(minutes: 3)),
+            'pressure': 1015.0
+          },
         ],
       });
 
@@ -1070,8 +1087,14 @@ void main() {
       final result = await join.apply(leftDs, {
         'method': 'forward',
         'rightData': <Map<String, dynamic>>[
-          {'_timestamp': now.add(const Duration(minutes: 1)), 'pressure': 1013.0},
-          {'_timestamp': now.add(const Duration(minutes: 4)), 'pressure': 1015.0},
+          {
+            '_timestamp': now.add(const Duration(minutes: 1)),
+            'pressure': 1013.0
+          },
+          {
+            '_timestamp': now.add(const Duration(minutes: 4)),
+            'pressure': 1015.0
+          },
         ],
       });
 
@@ -1084,13 +1107,20 @@ void main() {
       expect(result.rows[2]['pressure'], isNull);
     });
 
-    test('TC-064: backward join matches last right timestamp <= left', () async {
+    test('TC-064: backward join matches last right timestamp <= left',
+        () async {
       final now = DateTime(2024, 1, 1);
       final result = await join.apply(leftDs, {
         'method': 'backward',
         'rightData': <Map<String, dynamic>>[
-          {'_timestamp': now.add(const Duration(minutes: 1)), 'pressure': 1013.0},
-          {'_timestamp': now.add(const Duration(minutes: 4)), 'pressure': 1015.0},
+          {
+            '_timestamp': now.add(const Duration(minutes: 1)),
+            'pressure': 1013.0
+          },
+          {
+            '_timestamp': now.add(const Duration(minutes: 4)),
+            'pressure': 1015.0
+          },
         ],
       });
 
@@ -1120,7 +1150,8 @@ void main() {
       expect(colNames, contains('humidity'));
     });
 
-    test('TC-066: join with left row missing timestamp preserves row as-is', () async {
+    test('TC-066: join with left row missing timestamp preserves row as-is',
+        () async {
       final ds = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
@@ -1181,7 +1212,8 @@ void main() {
     test('TC-071: converts Pa to kPa', () async {
       final ds = AnalysisDataSet(
         columns: [
-          const AnalysisColumnInfo(name: 'pressure', type: 'double', unit: 'Pa'),
+          const AnalysisColumnInfo(
+              name: 'pressure', type: 'double', unit: 'Pa'),
         ],
         rows: [
           {'pressure': 101325.0},
@@ -1241,7 +1273,8 @@ void main() {
       expect(result.rows[0]['temp'] as double, closeTo(273.15, 0.01));
     });
 
-    test('TC-074: unsupported conversion pair leaves values unchanged', () async {
+    test('TC-074: unsupported conversion pair leaves values unchanged',
+        () async {
       final ds = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: 'val', type: 'double', unit: 'X'),
@@ -1650,7 +1683,8 @@ void main() {
 
       expect(propagatedSchema.length, equals(result.dataSet.columns.length));
       for (var i = 0; i < propagatedSchema.length; i++) {
-        expect(propagatedSchema[i].name, equals(result.dataSet.columns[i].name));
+        expect(
+            propagatedSchema[i].name, equals(result.dataSet.columns[i].name));
       }
     });
 
@@ -1748,10 +1782,10 @@ void main() {
                 contains('throwing_transform'),
               )
               .having(
-                (e) => e.details?['parameters'],
-                'details.parameters',
-                {'key': 'val'},
-              ),
+            (e) => e.details?['parameters'],
+            'details.parameters',
+            {'key': 'val'},
+          ),
         ),
       );
     });
@@ -2031,12 +2065,10 @@ void main() {
       );
 
       expect(outputSchema.length, equals(testColumns.length));
-      final tempCol =
-          outputSchema.firstWhere((c) => c.name == 'temperature');
+      final tempCol = outputSchema.firstWhere((c) => c.name == 'temperature');
       expect(tempCol.unit, equals('C'));
       // Other columns unchanged
-      final statusCol =
-          outputSchema.firstWhere((c) => c.name == 'status');
+      final statusCol = outputSchema.firstWhere((c) => c.name == 'status');
       expect(statusCol.unit, isNull);
     });
 
@@ -2108,8 +2140,7 @@ void main() {
       expect(colNames, contains('temperature'));
       expect(colNames, isNot(contains('status')));
       // Temperature unit updated by unit_convert step
-      final tempCol =
-          outputSchema.firstWhere((c) => c.name == 'temperature');
+      final tempCol = outputSchema.firstWhere((c) => c.name == 'temperature');
       expect(tempCol.unit, equals('C'));
     });
   });

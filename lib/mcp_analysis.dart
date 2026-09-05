@@ -3,10 +3,13 @@
 /// Provides analysis orchestration, data source management,
 /// transform pipelines, function execution, alert evaluation,
 /// and MCP integration for the makemind ecosystem.
-library mcp_analysis;
+library;
 
 // CORE - Port Adapter
 export 'src/core/analysis_port_adapter.dart';
+
+// CORE - Persistence
+export 'src/core/persistence/kv_backed_storage.dart';
 
 // CORE - Spec
 export 'src/core/spec/spec_validator.dart';
@@ -19,6 +22,8 @@ export 'src/core/artifact/artifact_store.dart';
 export 'src/core/artifact/provenance_tracker.dart';
 
 // CORE - Execution
+export 'src/core/execution/source_merger.dart';
+export 'src/core/execution/step_input_resolver.dart';
 export 'src/core/execution/step_logger.dart';
 export 'src/core/execution/job_manager.dart';
 export 'src/core/execution/retry_policy.dart';

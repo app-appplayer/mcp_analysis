@@ -40,7 +40,7 @@ void main() {
     test('2nd-order resonator impulse response rings at f_d', () async {
       // ωn = 2π·5, ζ = 0.05 → damped frequency ≈ 4.99 Hz.
       const fs = 500.0;
-      final wn = 2 * math.pi * 5;
+      const wn = 2 * math.pi * 5;
       final y = await values({
         'samples': 2048,
         'sampleRate': fs,
@@ -56,7 +56,9 @@ void main() {
       });
       final ds = AnalysisDataSet(
         columns: const [AnalysisColumnInfo(name: 'v', type: 'double')],
-        rows: [for (final v in y) <String, dynamic>{'v': v}],
+        rows: [
+          for (final v in y) <String, dynamic>{'v': v}
+        ],
         rowCount: y.length,
       );
       final r = await FftFunction().execute({'sampleRate': fs}, ds);
@@ -82,7 +84,7 @@ void main() {
           },
         ],
       });
-      final zeta = 0.2;
+      const zeta = 0.2;
       final expectedPeak =
           1 + math.exp(-math.pi * zeta / math.sqrt(1 - zeta * zeta));
       expect(y.reduce(math.max), closeTo(expectedPeak, 0.01));
@@ -178,7 +180,9 @@ void main() {
           containsAll(['value', 'value_p5', 'value_p50', 'value_p95']));
       // Averaged over samples: mean ≈ 5, p95 − p5 ≈ 2·1.645·std.
       double avg(String col) =>
-          ds.rows.map((r) => (r[col] as num).toDouble()).reduce((a, b) => a + b) /
+          ds.rows
+              .map((r) => (r[col] as num).toDouble())
+              .reduce((a, b) => a + b) /
           ds.rows.length;
       expect(avg('value'), closeTo(5.0, 0.05));
       expect(avg('value_p95') - avg('value_p5'), closeTo(3.29, 0.3));

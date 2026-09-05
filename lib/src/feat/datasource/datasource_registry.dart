@@ -40,6 +40,16 @@ class DataSourceRegistry implements AnalysisDataSourcePort {
   }
 
   /// Unregister an adapter.
+  /// Whether a source type has an adapter.
+  ///
+  /// Callers otherwise learn a source is unregistered only by asking it
+  /// for data and reading the failure.
+  bool hasAdapter(AnalysisSourceType sourceType) =>
+      _adapters.containsKey(sourceType);
+
+  /// Source types this registry can serve.
+  List<AnalysisSourceType> get registeredTypes => _adapters.keys.toList();
+
   void unregister(AnalysisSourceType sourceType) {
     _adapters.remove(sourceType);
   }

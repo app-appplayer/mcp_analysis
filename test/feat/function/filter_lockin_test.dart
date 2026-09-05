@@ -77,8 +77,7 @@ void main() {
       final x = List<double>.filled(200, 10.0);
       x[50] = 500.0;
       x[120] = -300.0;
-      final r =
-          await filter.execute({'type': 'median', 'taps': 5}, _signal(x));
+      final r = await filter.execute({'type': 'median', 'taps': 5}, _signal(x));
       final out = (r.results['values'] as List).cast<double>();
       expect(out[50], 10.0);
       expect(out[120], 10.0);
@@ -99,8 +98,8 @@ void main() {
             2.0 * math.sin(2 * math.pi * 33 * t) + // 40× interferer
             (rng.nextDouble() - 0.5) * 0.5; // broadband noise
       });
-      final r = await LockinFunction().execute(
-          {'sampleRate': fs, 'referenceFrequency': fRef}, _signal(x));
+      final r = await LockinFunction()
+          .execute({'sampleRate': fs, 'referenceFrequency': fRef}, _signal(x));
       expect(r.results['amplitude'], closeTo(amp, amp * 0.15));
       expect(r.results['phase'], closeTo(phase, 0.1));
       expect((r.results['amplitudeSeries'] as List).length, n);

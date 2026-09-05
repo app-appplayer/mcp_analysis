@@ -24,11 +24,14 @@ AnalysisSpec _createTestSpec({
     analysisSteps: [
       AnalysisStep(
         function: 'descriptive_stats',
-        parameters: {'columns': ['temp']},
+        parameters: {
+          'columns': ['temp']
+        },
       ),
     ],
     outputs: [
       AnalysisOutputDef(
+        from: 'descriptive_stats',
         type: AnalysisArtifactType.metric,
         name: 'stats',
       ),
@@ -79,7 +82,7 @@ void main() {
         rbacContext: ctx,
       );
 
-      expect(result, containsPair('specs', isA<List>()));
+      expect(result, containsPair('specs', isA<List<dynamic>>()));
     });
 
     // TC-002: Operator cannot create specs
@@ -93,7 +96,7 @@ void main() {
         rbacContext: ctx,
       );
 
-      expect(result, containsPair('error', isA<Map>()));
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'governance.unauthorized');
     });
@@ -141,7 +144,7 @@ void main() {
         rbacContext: ctx,
       );
 
-      expect(result, containsPair('error', isA<Map>()));
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'governance.unauthorized');
     });
@@ -265,7 +268,7 @@ void main() {
         },
       );
 
-      expect(result, containsPair('artifacts', isA<List>()));
+      expect(result, containsPair('artifacts', isA<List<dynamic>>()));
       final artifacts = result['artifacts'] as List;
       expect(artifacts, isNotEmpty);
 

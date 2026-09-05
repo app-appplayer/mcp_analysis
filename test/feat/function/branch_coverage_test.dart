@@ -74,8 +74,8 @@ void main() {
 
     test('guards: missing cutoff and above-Nyquist cutoff throw', () {
       expect(
-          () => f.execute(
-              {'type': 'lowpass', 'sampleRate': fs}, _series(_sine(10, fs, 64))),
+          () => f.execute({'type': 'lowpass', 'sampleRate': fs},
+              _series(_sine(10, fs, 64))),
           throwsArgumentError);
       expect(
           () => f.execute(
@@ -128,8 +128,8 @@ void main() {
 
   group('hrv_metrics — unit seconds branch', () {
     test('unit=s converts to ms', () async {
-      final r = await HrvMetricsFunction().execute({'unit': 's'},
-          _series([0.8, 0.81, 0.79, 0.87], name: 'rr'));
+      final r = await HrvMetricsFunction()
+          .execute({'unit': 's'}, _series([0.8, 0.81, 0.79, 0.87], name: 'rr'));
       expect(r.results['meanRR'], closeTo(817.5, 0.1));
     });
   });
@@ -158,8 +158,7 @@ void main() {
 
   group('resample/envelope remaining branches', () {
     test('envelope peak mode tracks rectified maxima', () async {
-      final r = await EnvelopeFunction().execute(
-          {'mode': 'peak', 'window': 50},
+      final r = await EnvelopeFunction().execute({'mode': 'peak', 'window': 50},
           _series(_sine(20, 1000, 1000, amp: 3.0)));
       final out = (r.results['values'] as List).cast<double>();
       expect(out.last, closeTo(3.0, 0.05));
@@ -186,9 +185,11 @@ void main() {
         ],
         rowCount: 2,
       );
-      final r = await InterpolateFunction().execute(
-          {'columns': ['x', 'y'], 'method': 'spline', 'queryPoints': [1.0]},
-          data);
+      final r = await InterpolateFunction().execute({
+        'columns': ['x', 'y'],
+        'method': 'spline',
+        'queryPoints': [1.0]
+      }, data);
       expect((r.results['values'] as List).cast<double>().single,
           closeTo(2.0, 1e-9));
     });
@@ -206,13 +207,14 @@ void main() {
           throwsArgumentError);
       expect(() => HarmonicsFunction().execute({'sampleRate': 10}, tiny),
           throwsArgumentError);
-      expect(() => KalmanFilterFunction().execute({}, tiny),
-          throwsArgumentError);
+      expect(
+          () => KalmanFilterFunction().execute({}, tiny), throwsArgumentError);
       expect(() => ChangepointCusumFunction().execute({}, tiny),
           throwsArgumentError);
       expect(
-          () => LombScargleFunction()
-              .execute({'columns': ['t', 'v']}, tiny),
+          () => LombScargleFunction().execute({
+                'columns': ['t', 'v']
+              }, tiny),
           throwsArgumentError);
     });
 
@@ -221,8 +223,7 @@ void main() {
           throwsArgumentError);
       expect(() => HypothesisTestFunction().execute({}, tiny),
           throwsArgumentError);
-      expect(
-          () => CrossPsdFunction().execute({'sampleRate': 10}, tiny),
+      expect(() => CrossPsdFunction().execute({'sampleRate': 10}, tiny),
           throwsArgumentError);
     });
   });
@@ -252,12 +253,11 @@ void main() {
                 'columns': ['a', 'b'],
                 'sampleRate': 100,
                 'segmentLength': 256,
-              },
-              _twoCol(List.filled(64, 0.0), List.filled(64, 0.0))),
+              }, _twoCol(List.filled(64, 0.0), List.filled(64, 0.0))),
           throwsArgumentError);
       expect(
-          () => SpectrogramFunction()
-              .execute({}, _series(List.filled(512, 0.0))),
+          () =>
+              SpectrogramFunction().execute({}, _series(List.filled(512, 0.0))),
           throwsArgumentError); // missing sampleRate
     });
   });
@@ -282,8 +282,7 @@ void main() {
     test('guards: bad JSON and bad sample count throw AnalysisError', () {
       expect(() => adapter.queryData(query: 'not-json'),
           throwsA(isA<AnalysisError>()));
-      expect(
-          () => adapter.queryData(query: '{"samples":0,"seed":1}'),
+      expect(() => adapter.queryData(query: '{"samples":0,"seed":1}'),
           throwsA(isA<AnalysisError>()));
     });
   });

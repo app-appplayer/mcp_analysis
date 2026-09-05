@@ -82,8 +82,7 @@ void main() {
   });
 
   group('ReorderBuffer', () {
-    test('releases points in event-time order once the watermark passes',
-        () {
+    test('releases points in event-time order once the watermark passes', () {
       final buf = ReorderBuffer(allowedLateness: const Duration(seconds: 5));
       expect(buf.add(pt(10, 1)), isEmpty); // watermark 5 — nothing ready
       expect(buf.add(pt(8, 2)), isEmpty); // out of order, held
@@ -92,8 +91,7 @@ void main() {
       expect(buf.pendingCount, 1); // the 20s point still held
     });
 
-    test('too-late point (older than last released) is dropped + counted',
-        () {
+    test('too-late point (older than last released) is dropped + counted', () {
       final buf = ReorderBuffer(allowedLateness: const Duration(seconds: 2));
       buf.add(pt(10, 1));
       buf.add(pt(20, 2)); // releases 10

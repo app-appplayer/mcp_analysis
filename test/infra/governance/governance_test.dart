@@ -69,7 +69,7 @@ void main() {
 
     // TC-001: Operator can execute (no exception)
     test('TC-001: operator can execute analysis', () async {
-      final ctx = RbacContext(actorId: 'op-1', role: 'operator');
+      const ctx = RbacContext(actorId: 'op-1', role: 'operator');
       // Should complete without throwing
       await policy.canExecute(ctx, 'test-spec');
     });
@@ -77,7 +77,7 @@ void main() {
     // TC-002: Operator cannot manage spec
     test('TC-002: operator cannot manage spec -> governance.unauthorized',
         () async {
-      final ctx = RbacContext(actorId: 'op-1', role: 'operator');
+      const ctx = RbacContext(actorId: 'op-1', role: 'operator');
       expect(
         () => policy.canManageSpec(ctx),
         throwsA(
@@ -92,27 +92,27 @@ void main() {
 
     // TC-003: Engineer can manage spec
     test('TC-003: engineer can manage spec', () async {
-      final ctx = RbacContext(actorId: 'eng-1', role: 'engineer');
+      const ctx = RbacContext(actorId: 'eng-1', role: 'engineer');
       // Should complete without throwing
       await policy.canManageSpec(ctx);
     });
 
     // TC-004: Engineer can execute
     test('TC-004: engineer can execute analysis', () async {
-      final ctx = RbacContext(actorId: 'eng-1', role: 'engineer');
+      const ctx = RbacContext(actorId: 'eng-1', role: 'engineer');
       await policy.canExecute(ctx, 'any-spec');
     });
 
     // TC-005: Admin can view audit
     test('TC-005: admin can view audit', () async {
-      final ctx = RbacContext(actorId: 'admin-1', role: 'admin');
+      const ctx = RbacContext(actorId: 'admin-1', role: 'admin');
       await policy.canViewAudit(ctx);
     });
 
     // TC-006: Operator cannot view audit
     test('TC-006: operator cannot view audit -> governance.unauthorized',
         () async {
-      final ctx = RbacContext(actorId: 'op-1', role: 'operator');
+      const ctx = RbacContext(actorId: 'op-1', role: 'operator');
       expect(
         () => policy.canViewAudit(ctx),
         throwsA(
@@ -138,7 +138,7 @@ void main() {
     // TC-008: Unknown role denied all operations
     test('TC-008: unknown role denied all -> governance.unauthorized',
         () async {
-      final ctx = RbacContext(actorId: 'guest-1', role: 'guest');
+      const ctx = RbacContext(actorId: 'guest-1', role: 'guest');
 
       // Every permission check should fail for an unknown role
       expect(
@@ -343,7 +343,8 @@ void main() {
     });
 
     // TC-014: Storage failure -> returns AnalysisError (non-blocking)
-    test('TC-014: storage failure returns AnalysisError non-blocking', () async {
+    test('TC-014: storage failure returns AnalysisError non-blocking',
+        () async {
       storage.shouldThrow = true;
 
       // recordExecution should return AnalysisError, not throw
@@ -458,7 +459,7 @@ void main() {
     // TC-019: Group 'engineers' member gets engineer-level permissions
     test('TC-019: engineers group elevates operator to engineer permissions',
         () async {
-      final ctx = RbacContext(
+      const ctx = RbacContext(
         actorId: 'user-004',
         role: 'operator',
         groups: ['engineers'],
@@ -468,8 +469,9 @@ void main() {
     });
 
     // TC-020: Group 'admin' member gets admin-level permissions
-    test('TC-020: admin group elevates operator to admin permissions', () async {
-      final ctx = RbacContext(
+    test('TC-020: admin group elevates operator to admin permissions',
+        () async {
+      const ctx = RbacContext(
         actorId: 'user-005',
         role: 'operator',
         groups: ['admin'],
@@ -480,7 +482,7 @@ void main() {
 
     // TC-021: Explicit role takes precedence over lower group-based role
     test('TC-021: explicit admin role preserved despite lower group', () async {
-      final ctx = RbacContext(
+      const ctx = RbacContext(
         actorId: 'user-006',
         role: 'admin',
         groups: ['operators'],
@@ -490,8 +492,9 @@ void main() {
     });
 
     // TC-023: Group 'admins' (plural) member gets admin-level permissions
-    test('TC-023: admins (plural) group elevates to admin permissions', () async {
-      final ctx = RbacContext(
+    test('TC-023: admins (plural) group elevates to admin permissions',
+        () async {
+      const ctx = RbacContext(
         actorId: 'user-007',
         role: 'operator',
         groups: ['admins'],
@@ -502,7 +505,7 @@ void main() {
     // TC-024: Explicit role not downgraded by lower group
     test('TC-024: explicit engineer role not downgraded by operators group',
         () async {
-      final ctx = RbacContext(
+      const ctx = RbacContext(
         actorId: 'user-008',
         role: 'engineer',
         groups: ['operators'],
@@ -619,8 +622,8 @@ void main() {
     test('TC-027: checkPermission direct call with operation and resourceId',
         () async {
       final policy = RbacPolicy();
-      final engineerCtx = RbacContext(actorId: 'user-002', role: 'engineer');
-      final operatorCtx = RbacContext(actorId: 'user-001', role: 'operator');
+      const engineerCtx = RbacContext(actorId: 'user-002', role: 'engineer');
+      const operatorCtx = RbacContext(actorId: 'user-001', role: 'operator');
 
       // Engineer should be permitted to execute with resourceId
       await policy.checkPermission(
@@ -657,7 +660,7 @@ void main() {
       final storage = InMemoryStorage<AuditRecord>();
       final logger = AuditLogger(storage: storage);
 
-      final ctx = RbacContext(actorId: 'eng-1', role: 'engineer');
+      const ctx = RbacContext(actorId: 'eng-1', role: 'engineer');
 
       // Permission check should pass
       await policy.canExecute(ctx, 'spec-001');

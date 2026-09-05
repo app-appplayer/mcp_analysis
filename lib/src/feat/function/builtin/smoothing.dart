@@ -54,6 +54,29 @@ class SmoothingFunction implements AnalysisFunction {
                 'uses 1st/2nd derivatives)',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'method': AnalysisResultSchema(
+            name: 'method',
+            type: 'string',
+            description: 'Smoothing method',
+          ),
+          'values': AnalysisResultSchema(
+            name: 'values',
+            type: 'array',
+            itemType: 'number',
+            description: 'Smoothed signal',
+          ),
+          'sampleCount': AnalysisResultSchema(
+            name: 'sampleCount',
+            type: 'number',
+            description: 'Samples returned',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -71,8 +94,8 @@ class SmoothingFunction implements AnalysisFunction {
     List<double> out;
     switch (method) {
       case 'ema':
-        final alpha = (parameters['alpha'] as num?)?.toDouble() ??
-            2.0 / (window + 1);
+        final alpha =
+            (parameters['alpha'] as num?)?.toDouble() ?? 2.0 / (window + 1);
         out = List<double>.filled(x.length, 0.0);
         for (var i = 0; i < x.length; i++) {
           out[i] = i == 0 ? x[0] : alpha * x[i] + (1 - alpha) * out[i - 1];
@@ -80,10 +103,10 @@ class SmoothingFunction implements AnalysisFunction {
         break;
       case 'savgol':
         final w = window.isOdd ? math.max(5, window) : math.max(5, window + 1);
-        final order = math.min(
-            (parameters['polyOrder'] as num?)?.toInt() ?? 2, w - 2);
-        final deriv = math.min(
-            (parameters['derivative'] as num?)?.toInt() ?? 0, order);
+        final order =
+            math.min((parameters['polyOrder'] as num?)?.toInt() ?? 2, w - 2);
+        final deriv =
+            math.min((parameters['derivative'] as num?)?.toInt() ?? 0, order);
         final coeffs = _savgolCoefficients(w, order, derivative: deriv);
         final half = w ~/ 2;
         out = List<double>.generate(x.length, (i) {
@@ -125,8 +148,10 @@ class SmoothingFunction implements AnalysisFunction {
       {int derivative = 0}) {
     final half = window ~/ 2;
     // Vandermonde A: rows k=-half..half, cols p=0..order → k^p.
-    final a = List.generate(window,
-        (r) => List.generate(order + 1, (p) => math.pow(r - half, p).toDouble()));
+    final a = List.generate(
+        window,
+        (r) =>
+            List.generate(order + 1, (p) => math.pow(r - half, p).toDouble()));
     // Normal matrix N = AᵀA (size (order+1)²), target = Aᵀe (center weight).
     final m = order + 1;
     final n = List.generate(m, (i) => List<double>.filled(m, 0.0));
@@ -160,7 +185,9 @@ class SmoothingFunction implements AnalysisFunction {
 
   List<double> _solve(List<List<double>> a, List<double> b) {
     final n = b.length;
-    final m = [for (var i = 0; i < n; i++) [...a[i], b[i]]];
+    final m = [
+      for (var i = 0; i < n; i++) [...a[i], b[i]]
+    ];
     for (var col = 0; col < n; col++) {
       var pivot = col;
       for (var r = col + 1; r < n; r++) {
@@ -210,6 +237,24 @@ class DifferencingFunction implements AnalysisFunction {
             type: 'number',
             defaultValue: 1,
             description: 'Difference lag (seasonal period for seasonal)',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'values': AnalysisResultSchema(
+            name: 'values',
+            type: 'array',
+            itemType: 'number',
+            description: 'Differenced signal',
+          ),
+          'sampleCount': AnalysisResultSchema(
+            name: 'sampleCount',
+            type: 'number',
+            description: 'Samples returned',
           ),
         },
         supportedDataTypes: ['double', 'int'],

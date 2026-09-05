@@ -17,11 +17,10 @@ abstract class AnalysisFunction {
 
 /// Routes analysis function execution requests.
 class FunctionDispatcher implements AnalysisFunctionPort {
+  FunctionDispatcher({required FunctionCatalog catalog}) : _catalog = catalog;
   final FunctionCatalog _catalog;
   final Map<String, AnalysisFunction> _implementations = {};
   PluginLoader? _pluginLoader;
-
-  FunctionDispatcher({required FunctionCatalog catalog}) : _catalog = catalog;
 
   /// Set the plugin loader for timeout enforcement on plugin functions.
   void setPluginLoader(PluginLoader loader) {

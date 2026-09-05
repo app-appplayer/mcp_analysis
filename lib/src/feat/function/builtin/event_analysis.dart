@@ -26,7 +26,32 @@ class EventAnalysisFunction implements AnalysisFunction {
             name: 'metrics',
             type: 'array',
             defaultValue: ['frequency'],
-            description: 'Metrics to compute: frequency, mtbf, mttr, transitions',
+            description:
+                'Metrics to compute: frequency, mtbf, mttr, transitions',
+          ),
+        },
+        results: const {
+          'frequency': AnalysisResultSchema(
+            name: 'frequency',
+            type: 'number',
+            description: 'Events per unit time',
+          ),
+          'mtbf': AnalysisResultSchema(
+            name: 'mtbf',
+            type: 'number',
+            unit: 's',
+            description: 'Mean time between failures',
+          ),
+          'mttr': AnalysisResultSchema(
+            name: 'mttr',
+            type: 'number',
+            unit: 's',
+            description: 'Mean time to recovery',
+          ),
+          'transitions': AnalysisResultSchema(
+            name: 'transitions',
+            type: 'object',
+            description: 'State transition counts',
           ),
         },
         supportedDataTypes: ['string', 'datetime'],
@@ -40,8 +65,8 @@ class EventAnalysisFunction implements AnalysisFunction {
     final sw = Stopwatch()..start();
     final eventColumn = parameters['eventColumn'] as String? ?? 'event';
     final tsColumn = parameters['timestampColumn'] as String? ?? '_timestamp';
-    final metrics = (parameters['metrics'] as List?)?.cast<String>() ??
-        ['frequency'];
+    final metrics =
+        (parameters['metrics'] as List?)?.cast<String>() ?? ['frequency'];
 
     final results = <String, dynamic>{};
 
@@ -57,7 +82,8 @@ class EventAnalysisFunction implements AnalysisFunction {
     if (metrics.contains('mtbf')) {
       // Mean Time Between Failures
       final failureEvents = data.rows
-          .where((r) => '${r[eventColumn]}'.toLowerCase().contains('error') ||
+          .where((r) =>
+              '${r[eventColumn]}'.toLowerCase().contains('error') ||
               '${r[eventColumn]}'.toLowerCase().contains('fail'))
           .toList();
 
@@ -75,7 +101,8 @@ class EventAnalysisFunction implements AnalysisFunction {
         if (timestamps.length >= 2) {
           var totalMs = 0;
           for (var i = 1; i < timestamps.length; i++) {
-            totalMs += timestamps[i].difference(timestamps[i - 1]).inMilliseconds;
+            totalMs +=
+                timestamps[i].difference(timestamps[i - 1]).inMilliseconds;
           }
           results['mtbf'] = Duration(
             milliseconds: totalMs ~/ (timestamps.length - 1),
@@ -100,7 +127,7 @@ class EventAnalysisFunction implements AnalysisFunction {
               '${r[eventColumn]}'.toLowerCase().contains('fixed'))
           .toList();
 
-      DateTime? _parseTimestamp(dynamic ts) {
+      DateTime? parseTimestamp(dynamic ts) {
         if (ts is DateTime) return ts;
         if (ts is String) return DateTime.tryParse(ts);
         return null;
@@ -111,13 +138,13 @@ class EventAnalysisFunction implements AnalysisFunction {
         var pairCount = 0;
 
         for (final failure in failureEvents) {
-          final failureTs = _parseTimestamp(failure[tsColumn]);
+          final failureTs = parseTimestamp(failure[tsColumn]);
           if (failureTs == null) continue;
 
           // Find next recovery after this failure
           DateTime? recoveryTs;
           for (final recovery in recoveryEvents) {
-            final rTs = _parseTimestamp(recovery[tsColumn]);
+            final rTs = parseTimestamp(recovery[tsColumn]);
             if (rTs != null && rTs.isAfter(failureTs)) {
               recoveryTs = rTs;
               break;

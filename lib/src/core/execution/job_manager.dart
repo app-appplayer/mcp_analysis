@@ -6,13 +6,13 @@ import 'job_operations.dart';
 
 /// Manages lifecycle of AnalysisJob instances.
 class JobManager implements JobOperations {
+  JobManager({required StoragePort<AnalysisJob> storage}) : _storage = storage;
   final StoragePort<AnalysisJob> _storage;
   final Map<String, void Function()> _cancelHandlers = {};
   final Random _random = Random();
 
-  JobManager({required StoragePort<AnalysisJob> storage}) : _storage = storage;
-
   /// Create a new Job with unique ID.
+  @override
   Future<AnalysisJob> createJob({
     required String specId,
     required String specVersion,
@@ -41,6 +41,7 @@ class JobManager implements JobOperations {
   }
 
   /// Transition job to running state.
+  @override
   Future<AnalysisJob> startJob(String jobId) async {
     final job = await _storage.get(jobId);
     if (job == null) {
@@ -68,6 +69,7 @@ class JobManager implements JobOperations {
   }
 
   /// Update job progress.
+  @override
   Future<void> updateProgress(String jobId, double progress) async {
     final job = await _storage.get(jobId);
     if (job == null) return;
@@ -92,6 +94,7 @@ class JobManager implements JobOperations {
   }
 
   /// Complete a job successfully.
+  @override
   Future<AnalysisJob> completeJob(
     String jobId, {
     List<String> artifactIds = const [],
@@ -129,6 +132,7 @@ class JobManager implements JobOperations {
   }
 
   /// Fail a job.
+  @override
   Future<AnalysisJob> failJob(
     String jobId, {
     List<AnalysisError> errors = const [],
@@ -164,6 +168,7 @@ class JobManager implements JobOperations {
   }
 
   /// Cancel a job.
+  @override
   Future<AnalysisJob> cancelJob(String jobId) async {
     final job = await _storage.get(jobId);
     if (job == null) {
@@ -216,6 +221,7 @@ class JobManager implements JobOperations {
 
   /// Append an error to a running Job without changing its status.
   /// Used for non-fatal errors in streaming mode.
+  @override
   Future<void> addError(String jobId, AnalysisError error) async {
     final job = await _storage.get(jobId);
     if (job == null) {
@@ -250,11 +256,13 @@ class JobManager implements JobOperations {
   }
 
   /// Get a job by ID.
+  @override
   Future<AnalysisJob?> getJob(String jobId) async {
     return _storage.get(jobId);
   }
 
   /// List all jobs.
+  @override
   Future<List<AnalysisJob>> listJobs() async {
     return _storage.getAll();
   }

@@ -52,6 +52,45 @@ class KalmanFilterFunction implements AnalysisFunction {
             description: 'Forecast steps ahead',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'model': AnalysisResultSchema(
+            name: 'model',
+            type: 'string',
+            description: 'State model used',
+          ),
+          'filtered': AnalysisResultSchema(
+            name: 'filtered',
+            type: 'array',
+            itemType: 'number',
+            description: 'Filtered estimate per sample',
+          ),
+          'forecast': AnalysisResultSchema(
+            name: 'forecast',
+            type: 'array',
+            itemType: 'number',
+            description: 'Forecast beyond the input',
+          ),
+          'level': AnalysisResultSchema(
+            name: 'level',
+            type: 'number',
+            description: 'Final level estimate',
+          ),
+          'trend': AnalysisResultSchema(
+            name: 'trend',
+            type: 'number',
+            description: 'Final trend estimate',
+          ),
+          'innovationStd': AnalysisResultSchema(
+            name: 'innovationStd',
+            type: 'number',
+            description: 'Innovation standard deviation',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -69,8 +108,7 @@ class KalmanFilterFunction implements AnalysisFunction {
     final model = parameters['model'] as String? ?? 'trend';
     final q = (parameters['processNoise'] as num?)?.toDouble() ?? 1e-3;
     final r = (parameters['measurementNoise'] as num?)?.toDouble() ?? 1.0;
-    final horizon =
-        math.max(1, (parameters['horizon'] as num?)?.toInt() ?? 10);
+    final horizon = math.max(1, (parameters['horizon'] as num?)?.toInt() ?? 10);
 
     final filtered = List<double>.filled(z.length, 0.0);
     double level, trend = 0.0;

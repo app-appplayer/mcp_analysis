@@ -33,6 +33,42 @@ class SeasonalityFunction implements AnalysisFunction {
             description: 'Decomposition method: moving_average',
           ),
         },
+        results: const {
+          'trend': AnalysisResultSchema(
+            name: 'trend',
+            type: 'array',
+            itemType: 'number',
+            description: 'Trend component',
+          ),
+          'seasonal': AnalysisResultSchema(
+            name: 'seasonal',
+            type: 'array',
+            itemType: 'number',
+            description: 'Seasonal component',
+          ),
+          'residual': AnalysisResultSchema(
+            name: 'residual',
+            type: 'array',
+            itemType: 'number',
+            description: 'Residual component',
+          ),
+          'seasonal_indices': AnalysisResultSchema(
+            name: 'seasonal_indices',
+            type: 'array',
+            itemType: 'number',
+            description: 'Index per season slot',
+          ),
+          'period': AnalysisResultSchema(
+            name: 'period',
+            type: 'number',
+            description: 'Detected period in samples',
+          ),
+          'strength': AnalysisResultSchema(
+            name: 'strength',
+            type: 'number',
+            description: 'Seasonal strength, 0..1',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -55,8 +91,7 @@ class SeasonalityFunction implements AnalysisFunction {
     if (period < 2) {
       throw AnalysisError(
         code: 'analysis.parameter_error',
-        message:
-            'Period must be >= 2, got $period',
+        message: 'Period must be >= 2, got $period',
         step: 'function:seasonality_analysis',
       );
     }
@@ -64,16 +99,15 @@ class SeasonalityFunction implements AnalysisFunction {
     // Extract numeric values
     final values = data.rows
         .map((r) => r[column])
-        .where((v) => v is num)
-        .map((v) => (v as num).toDouble())
+        .whereType<num>()
+        .map((v) => (v).toDouble())
         .toList();
 
     // Validate data length
     if (values.length < period * 2) {
       throw AnalysisError(
         code: 'analysis.parameter_error',
-        message:
-            'Need at least ${period * 2} data points for period $period, '
+        message: 'Need at least ${period * 2} data points for period $period, '
             'got ${values.length}',
         step: 'function:seasonality_analysis',
       );
@@ -142,14 +176,14 @@ class SeasonalityFunction implements AnalysisFunction {
     }
 
     // Normalize seasonal indices to sum approximately to 0
-    final indexMean =
-        seasonalIndices.reduce((a, b) => a + b) / period;
+    final indexMean = seasonalIndices.reduce((a, b) => a + b) / period;
     for (var i = 0; i < period; i++) {
       seasonalIndices[i] -= indexMean;
     }
 
     // Step 4: Repeat seasonal indices across full series
-    final seasonal = List<double>.generate(n, (i) => seasonalIndices[i % period]);
+    final seasonal =
+        List<double>.generate(n, (i) => seasonalIndices[i % period]);
 
     // Step 5: Residual = values - trend - seasonal (null where trend is null)
     final residual = List<double?>.filled(n, null);

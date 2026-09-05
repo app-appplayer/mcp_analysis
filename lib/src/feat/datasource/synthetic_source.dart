@@ -70,8 +70,8 @@ class SyntheticSourceAdapter extends DataSourceAdapter
 
   @override
   Future<AnalysisSourceSchema> getSourceMetadata(String query) async {
-    return AnalysisSourceSchema(
-      columns: const [
+    return const AnalysisSourceSchema(
+      columns: [
         AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
         AnalysisColumnInfo(name: 'value', type: 'double'),
       ],
@@ -92,8 +92,8 @@ class SyntheticSourceAdapter extends DataSourceAdapter
     final full = _generate(spec);
     final batchSize = (spec['batchSize'] as num?)?.toInt() ?? 100;
     for (var start = 0; start < full.rows.length; start += batchSize) {
-      final rows = full.rows.sublist(
-          start, math.min(start + batchSize, full.rows.length));
+      final rows = full.rows
+          .sublist(start, math.min(start + batchSize, full.rows.length));
       yield AnalysisDataSet(
         columns: full.columns,
         rows: rows,
@@ -260,9 +260,11 @@ class SyntheticSourceAdapter extends DataSourceAdapter
         return ((c['slope'] as num?)?.toDouble() ?? 1.0) * t;
       case 'sine':
         return ((c['amplitude'] as num?)?.toDouble() ?? 1.0) *
-            math.sin(
-                2 * math.pi * ((c['frequency'] as num?)?.toDouble() ?? 1.0) * t +
-                    ((c['phase'] as num?)?.toDouble() ?? 0.0));
+            math.sin(2 *
+                    math.pi *
+                    ((c['frequency'] as num?)?.toDouble() ?? 1.0) *
+                    t +
+                ((c['phase'] as num?)?.toDouble() ?? 0.0));
       case 'noise':
         final std = (c['std'] as num?)?.toDouble() ?? 1.0;
         final dist = c['distribution'] as String? ?? 'gaussian';
@@ -309,7 +311,7 @@ class SyntheticSourceAdapter extends DataSourceAdapter
     }
 
     final dt = 1 / sampleRate;
-    var x = List<double>.from(ss.x0);
+    final x = List<double>.from(ss.x0);
     final y = List<double>.filled(samples, 0.0);
     final k1 = List<double>.filled(n, 0.0);
     final k2 = List<double>.filled(n, 0.0);
@@ -362,8 +364,7 @@ class SyntheticSourceAdapter extends DataSourceAdapter
             ?.map((row) =>
                 (row as List).map((v) => (v as num).toDouble()).toList())
             .toList();
-        final b =
-            (c['b'] as List?)?.map((v) => (v as num).toDouble()).toList();
+        final b = (c['b'] as List?)?.map((v) => (v as num).toDouble()).toList();
         final cRow =
             (c['c'] as List?)?.map((v) => (v as num).toDouble()).toList();
         if (a == null || b == null || cRow == null) {
@@ -392,8 +393,7 @@ class SyntheticSourceAdapter extends DataSourceAdapter
             message: 'x0 length must equal state count',
           );
         }
-        return _StateSpace(
-            a, b, cRow, (c['d'] as num?)?.toDouble() ?? 0.0, x0);
+        return _StateSpace(a, b, cRow, (c['d'] as num?)?.toDouble() ?? 0.0, x0);
 
       case 'transfer_function':
         final num0 =

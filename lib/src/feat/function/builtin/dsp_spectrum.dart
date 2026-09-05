@@ -16,8 +16,7 @@ class FftFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'fft',
-        description:
-            'Single-sided FFT magnitude spectrum (radix-2, windowed)',
+        description: 'Single-sided FFT magnitude spectrum (radix-2, windowed)',
         parameters: {
           'column': AnalysisParameterSchema(
             name: 'column',
@@ -34,6 +33,55 @@ class FftFunction implements AnalysisFunction {
             type: 'string',
             defaultValue: 'hann',
             description: 'Window function: hann, hamming, rect',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'frequencies': AnalysisResultSchema(
+            name: 'frequencies',
+            type: 'array',
+            itemType: 'number',
+            unit: 'Hz',
+            description: 'Frequency bins',
+          ),
+          'magnitudes': AnalysisResultSchema(
+            name: 'magnitudes',
+            type: 'array',
+            itemType: 'number',
+            description: 'Amplitude per bin',
+          ),
+          'phases': AnalysisResultSchema(
+            name: 'phases',
+            type: 'array',
+            itemType: 'number',
+            unit: 'rad',
+            description: 'Phase per bin',
+          ),
+          'dominantFrequency': AnalysisResultSchema(
+            name: 'dominantFrequency',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Bin with the largest magnitude',
+          ),
+          'resolution': AnalysisResultSchema(
+            name: 'resolution',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Frequency spacing',
+          ),
+          'sampleCount': AnalysisResultSchema(
+            name: 'sampleCount',
+            type: 'number',
+            description: 'Input samples',
+          ),
+          'fftSize': AnalysisResultSchema(
+            name: 'fftSize',
+            type: 'number',
+            description: 'Transform length',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -80,8 +128,7 @@ class FftFunction implements AnalysisFunction {
     });
 
     // Phase spectrum (radians) — phasor/harmonic-phase consumers.
-    final phases =
-        List<double>.generate(half, (i) => math.atan2(im[i], re[i]));
+    final phases = List<double>.generate(half, (i) => math.atan2(im[i], re[i]));
 
     var domIdx = 1 <= half - 1 ? 1 : 0;
     for (var i = 1; i < half; i++) {
@@ -153,6 +200,43 @@ class PsdWelchFunction implements AnalysisFunction {
                 'Optional [{name, low, high}] Hz ranges → integrated power',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'frequencies': AnalysisResultSchema(
+            name: 'frequencies',
+            type: 'array',
+            itemType: 'number',
+            unit: 'Hz',
+            description: 'Frequency bins',
+          ),
+          'psd': AnalysisResultSchema(
+            name: 'psd',
+            type: 'array',
+            itemType: 'number',
+            description: 'Power spectral density',
+          ),
+          'resolution': AnalysisResultSchema(
+            name: 'resolution',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Frequency spacing',
+          ),
+          'segments': AnalysisResultSchema(
+            name: 'segments',
+            type: 'number',
+            description: 'Welch segment count',
+          ),
+          'bandPowers': AnalysisResultSchema(
+            name: 'bandPowers',
+            type: 'object',
+            description: 'Integrated power per requested band; present when '
+                'bands are requested',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -171,8 +255,7 @@ class PsdWelchFunction implements AnalysisFunction {
     final segLen =
         nextPow2(((parameters['segmentLength'] as num?)?.toInt() ?? 256));
     if (signal.length < segLen) {
-      throw ArgumentError(
-          'psd_welch needs ≥ segmentLength ($segLen) samples, '
+      throw ArgumentError('psd_welch needs ≥ segmentLength ($segLen) samples, '
           'got ${signal.length}');
     }
     final overlap =

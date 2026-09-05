@@ -48,6 +48,36 @@ class ResampleFunction implements AnalysisFunction {
             description: 'Target rate in Hz (linear mode)',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'mode': AnalysisResultSchema(
+            name: 'mode',
+            type: 'string',
+            description: 'Resampling mode',
+          ),
+          'values': AnalysisResultSchema(
+            name: 'values',
+            type: 'array',
+            itemType: 'number',
+            description: 'Resampled signal',
+          ),
+          'sampleCount': AnalysisResultSchema(
+            name: 'sampleCount',
+            type: 'number',
+            description: 'Samples returned',
+          ),
+          'outputRate': AnalysisResultSchema(
+            name: 'outputRate',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Resulting sample rate; present when the mode '
+                'implies one',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -137,6 +167,29 @@ class EnvelopeFunction implements AnalysisFunction {
             type: 'number',
             defaultValue: 16,
             description: 'Envelope window length in samples',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'mode': AnalysisResultSchema(
+            name: 'mode',
+            type: 'string',
+            description: 'Envelope mode',
+          ),
+          'values': AnalysisResultSchema(
+            name: 'values',
+            type: 'array',
+            itemType: 'number',
+            description: 'Envelope signal',
+          ),
+          'sampleCount': AnalysisResultSchema(
+            name: 'sampleCount',
+            type: 'number',
+            description: 'Samples returned',
           ),
         },
         supportedDataTypes: ['double', 'int'],

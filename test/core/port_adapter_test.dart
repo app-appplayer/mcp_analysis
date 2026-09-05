@@ -10,17 +10,6 @@ import '../helpers/test_data.dart';
 // ============================================================================
 
 class _TestFixture {
-  final InMemoryStorage<AnalysisSpec> specStorage;
-  final InMemoryStorage<AnalysisJob> jobStorage;
-  final InMemoryStorage<AnalysisArtifact> artifactStorage;
-  final InMemoryStorage<AuditRecord> auditStorage;
-  final SpecManager specManager;
-  final JobManager jobManager;
-  final ArtifactStore artifactStore;
-  final DataSourceRegistry dataSourceRegistry;
-  final AlertEvaluator alertEvaluator;
-  final AnalysisPortAdapter adapter;
-
   _TestFixture._({
     required this.specStorage,
     required this.jobStorage,
@@ -127,6 +116,16 @@ class _TestFixture {
       adapter: adapter,
     );
   }
+  final InMemoryStorage<AnalysisSpec> specStorage;
+  final InMemoryStorage<AnalysisJob> jobStorage;
+  final InMemoryStorage<AnalysisArtifact> artifactStorage;
+  final InMemoryStorage<AuditRecord> auditStorage;
+  final SpecManager specManager;
+  final JobManager jobManager;
+  final ArtifactStore artifactStore;
+  final DataSourceRegistry dataSourceRegistry;
+  final AlertEvaluator alertEvaluator;
+  final AnalysisPortAdapter adapter;
 }
 
 // ============================================================================
@@ -411,7 +410,8 @@ void main() {
     });
 
     // TC-017: evaluateAlert throws source.unavailable when all sources fail
-    test('TC-017: evaluateAlert throws source.unavailable when all sources fail',
+    test(
+        'TC-017: evaluateAlert throws source.unavailable when all sources fail',
         () async {
       // Create a spec with an input source that will always fail
       final spec = createTestSpec(
@@ -490,9 +490,9 @@ class _SimpleDataSourceAdapter implements DataSourceAdapter {
 
   @override
   Future<AnalysisSourceSchema> getSourceMetadata(String query) async {
-    return AnalysisSourceSchema(
+    return const AnalysisSourceSchema(
       columns: [
-        const AnalysisColumnInfo(name: 'temperature', type: 'double'),
+        AnalysisColumnInfo(name: 'temperature', type: 'double'),
       ],
     );
   }

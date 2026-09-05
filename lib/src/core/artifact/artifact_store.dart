@@ -4,12 +4,12 @@ import 'artifact_operations.dart';
 
 /// Handles persistence and query operations for artifacts.
 class ArtifactStore implements ArtifactOperations {
-  final StoragePort<AnalysisArtifact> _storage;
-
   ArtifactStore({required StoragePort<AnalysisArtifact> storage})
       : _storage = storage;
+  final StoragePort<AnalysisArtifact> _storage;
 
   /// Save a single artifact.
+  @override
   Future<void> save(AnalysisArtifact artifact) async {
     try {
       await _storage.save(artifact.artifactId, artifact);
@@ -23,6 +23,7 @@ class ArtifactStore implements ArtifactOperations {
   }
 
   /// Save multiple artifacts.
+  @override
   Future<void> saveAll(List<AnalysisArtifact> artifacts) async {
     for (final artifact in artifacts) {
       await save(artifact);
@@ -30,11 +31,13 @@ class ArtifactStore implements ArtifactOperations {
   }
 
   /// Get artifact by ID.
+  @override
   Future<AnalysisArtifact?> get(String artifactId) async {
     return _storage.get(artifactId);
   }
 
   /// Query artifacts with filters.
+  @override
   Future<List<AnalysisArtifact>> query({
     String? jobId,
     String? specId,
@@ -51,13 +54,25 @@ class ArtifactStore implements ArtifactOperations {
 
     var results = await _storage.query(criteria);
 
+    // Every filter is applied here, not only handed to the storage as
+    // criteria: a storage is free to ignore criteria it cannot index, and
+    // an unapplied filter returns other jobs' artifacts as if they were
+    // this job's.
+    if (jobId != null) {
+      results = results.where((a) => a.provenance.jobId == jobId).toList();
+    }
+
     if (type != null) {
       results = results.where((a) => a.type == type).toList();
     }
 
     if (specId != null) {
+      results = results.where((a) => a.provenance.specId == specId).toList();
+    }
+
+    if (tags != null && tags.isNotEmpty) {
       results =
-          results.where((a) => a.provenance.specId == specId).toList();
+          results.where((a) => tags.every(a.provenance.tags.contains)).toList();
     }
 
     if (timeRange != null) {

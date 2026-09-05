@@ -6,11 +6,6 @@ import '../governance/rbac_policy.dart';
 
 /// Maps MCP tool calls to AnalysisPort operations with governance.
 class McpToolHandler {
-  final AnalysisPort _analysisPort;
-  final RbacPolicy _rbac;
-  final AuditLogger _auditLogger;
-  final DataMasker _dataMasker;
-
   McpToolHandler({
     required AnalysisPort analysisPort,
     required RbacPolicy rbac,
@@ -20,6 +15,10 @@ class McpToolHandler {
         _rbac = rbac,
         _auditLogger = auditLogger,
         _dataMasker = dataMasker;
+  final AnalysisPort _analysisPort;
+  final RbacPolicy _rbac;
+  final AuditLogger _auditLogger;
+  final DataMasker _dataMasker;
 
   /// Route MCP tool call to appropriate handler.
   Future<Map<String, dynamic>> handleTool(
@@ -32,8 +31,7 @@ class McpToolHandler {
         'analysis.list_specs' =>
           await listSpecs(arguments, rbacContext: rbacContext),
         'analysis.run' => await run(arguments, rbacContext: rbacContext),
-        'analysis.get_job' =>
-          await getJob(arguments, rbacContext: rbacContext),
+        'analysis.get_job' => await getJob(arguments, rbacContext: rbacContext),
         'analysis.get_artifacts' =>
           await getArtifacts(arguments, rbacContext: rbacContext),
         'analysis.create_spec' =>
@@ -135,8 +133,7 @@ class McpToolHandler {
     }
 
     if (rbacContext != null) {
-      await _rbac.checkPermission(
-          context: rbacContext, operation: 'view_job');
+      await _rbac.checkPermission(context: rbacContext, operation: 'view_job');
     }
 
     final job = await _analysisPort.getJob(jobId);
@@ -256,8 +253,7 @@ class McpToolHandler {
     }
 
     if (rbacContext != null) {
-      await _rbac.checkPermission(
-          context: rbacContext, operation: 'execute');
+      await _rbac.checkPermission(context: rbacContext, operation: 'execute');
     }
 
     final alert = await _analysisPort.evaluateAlert(alertRuleId);
@@ -330,7 +326,10 @@ class McpToolHandler {
               'jobId': {'type': 'string'},
               'specId': {'type': 'string'},
               'type': {'type': 'string'},
-              'tags': {'type': 'array', 'items': {'type': 'string'}},
+              'tags': {
+                'type': 'array',
+                'items': {'type': 'string'}
+              },
               'limit': {'type': 'integer'},
             },
           },

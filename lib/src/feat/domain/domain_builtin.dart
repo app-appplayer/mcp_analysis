@@ -5,12 +5,13 @@ import 'package:mcp_bundle/ports.dart';
 import '../function/function_dispatcher.dart';
 import '../function/builtin/dsp_common.dart';
 
-/// Domain layer (1군) — thin, pure-Dart, dependency-free domain functions:
-/// each is a COMPOSITION of compute-layer primitives plus domain indicator
-/// definitions and judgment standards. Anything needing an external
-/// dependency (instrument drivers, file-format parsers, FFI) is 2군 and
-/// lives in an external pack behind the ports (architecture decision
-/// 2026-07-14: contract ← compute ← domain-1군 in ONE package).
+/// Domain layer (tier 1) — thin, pure-Dart, dependency-free domain
+/// functions: each is a COMPOSITION of compute-layer primitives plus
+/// domain indicator definitions and judgment standards. Anything needing
+/// an external dependency (instrument drivers, file-format parsers, FFI)
+/// is tier 2 and lives in an external pack behind the ports (architecture
+/// decision 2026-07-14: contract ← compute ← domain tier 1 in ONE
+/// package).
 
 /// Vibration severity indicators (`vibration_indicators`) — rotating
 /// machinery condition monitoring.
@@ -34,8 +35,7 @@ class VibrationIndicatorsFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'vibration_indicators',
-        description:
-            'Rotating-machinery vibration indicators + ISO 10816 zone',
+        description: 'Rotating-machinery vibration indicators + ISO 10816 zone',
         parameters: {
           'column': AnalysisParameterSchema(
             name: 'column',
@@ -47,6 +47,56 @@ class VibrationIndicatorsFunction implements AnalysisFunction {
             type: 'number',
             defaultValue: 2,
             description: 'ISO 10816-1 machine class (1..4)',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed velocity column',
+          ),
+          'rms': AnalysisResultSchema(
+            name: 'rms',
+            type: 'number',
+            unit: 'mm/s',
+            description: 'Root mean square velocity',
+          ),
+          'peak': AnalysisResultSchema(
+            name: 'peak',
+            type: 'number',
+            unit: 'mm/s',
+            description: 'Peak velocity',
+          ),
+          'peakToPeak': AnalysisResultSchema(
+            name: 'peakToPeak',
+            type: 'number',
+            unit: 'mm/s',
+            description: 'Peak-to-peak velocity',
+          ),
+          'crestFactor': AnalysisResultSchema(
+            name: 'crestFactor',
+            type: 'number',
+            description: 'Peak over RMS',
+          ),
+          'kurtosis': AnalysisResultSchema(
+            name: 'kurtosis',
+            type: 'number',
+            description: 'Impulsiveness; above 3 suggests bearing faults',
+          ),
+          'skewness': AnalysisResultSchema(
+            name: 'skewness',
+            type: 'number',
+            description: 'Distribution asymmetry',
+          ),
+          'isoZone': AnalysisResultSchema(
+            name: 'isoZone',
+            type: 'string',
+            description: 'ISO 10816 zone A/B/C/D',
+          ),
+          'isoLimits': AnalysisResultSchema(
+            name: 'isoLimits',
+            type: 'object',
+            description: 'Zone boundaries used',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -143,6 +193,48 @@ class HrvMetricsFunction implements AnalysisFunction {
             description: 'RR unit: ms | s',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed RR interval column',
+          ),
+          'count': AnalysisResultSchema(
+            name: 'count',
+            type: 'number',
+            description: 'Intervals used',
+          ),
+          'meanRR': AnalysisResultSchema(
+            name: 'meanRR',
+            type: 'number',
+            unit: 'ms',
+            description: 'Mean RR interval',
+          ),
+          'meanHeartRate': AnalysisResultSchema(
+            name: 'meanHeartRate',
+            type: 'number',
+            unit: 'bpm',
+            description: 'Mean heart rate',
+          ),
+          'sdnn': AnalysisResultSchema(
+            name: 'sdnn',
+            type: 'number',
+            unit: 'ms',
+            description: 'Standard deviation of NN intervals',
+          ),
+          'rmssd': AnalysisResultSchema(
+            name: 'rmssd',
+            type: 'number',
+            unit: 'ms',
+            description: 'Root mean square of successive differences',
+          ),
+          'pnn50': AnalysisResultSchema(
+            name: 'pnn50',
+            type: 'number',
+            unit: '%',
+            description: 'Share of successive differences over 50 ms',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -210,8 +302,7 @@ class EegBandPowersFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'eeg_band_powers',
-        description:
-            'EEG band powers over the standard clinical bands '
+        description: 'EEG band powers over the standard clinical bands '
             '(delta/theta/alpha/beta/gamma)',
         parameters: {
           'column': AnalysisParameterSchema(
@@ -229,6 +320,33 @@ class EegBandPowersFunction implements AnalysisFunction {
             type: 'number',
             defaultValue: 256,
             description: 'Welch segment length',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'bandPowers': AnalysisResultSchema(
+            name: 'bandPowers',
+            type: 'object',
+            description: 'Absolute power per band',
+          ),
+          'relativePowers': AnalysisResultSchema(
+            name: 'relativePowers',
+            type: 'object',
+            description: 'Power share per band',
+          ),
+          'dominantBand': AnalysisResultSchema(
+            name: 'dominantBand',
+            type: 'string',
+            description: 'Band with the most power',
+          ),
+          'totalPower': AnalysisResultSchema(
+            name: 'totalPower',
+            type: 'number',
+            description: 'Summed band power',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -290,9 +408,8 @@ class EegBandPowersFunction implements AnalysisFunction {
       for (final e in bandPowers.entries)
         e.key: total > 0 ? e.value / total : 0.0,
     };
-    final dominant = bandPowers.entries
-        .reduce((a, b) => a.value >= b.value ? a : b)
-        .key;
+    final dominant =
+        bandPowers.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
 
     return AnalysisFunctionResult(
       functionName: 'eeg_band_powers',

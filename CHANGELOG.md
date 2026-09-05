@@ -1,3 +1,77 @@
+## 0.2.0 - 2026-09-01
+
+### Added
+- Steps compose: `AnalysisStep.input` names an earlier step and the result
+  field to read, and the executor builds that step's dataset from it.
+- `AnalysisStep.transforms` — transforms applied to one step's data, after
+  its input is resolved and before its function runs.
+- Outputs select a result field: `AnalysisOutputDef.field` and
+  `indexField`. Charts and series carry the named values; a chart's axes
+  are labelled by the fields they come from.
+- All 35 built-in functions with fixed result keys declare them in
+  `AnalysisFunctionInfo.results`. `descriptive_stats` keys its results by
+  column name and declares none.
+- `AnalysisInputSource.columnAliases` and `merge` (`append` | `join`).
+  `SourceMerger` replaces the private merge in batch and ad-hoc execution.
+  Joining two sources that share a column name raises
+  `source.column_collision`.
+- `KvBackedStorage` — a `StoragePort` over the host's `KvStoragePort`.
+- `SpecManager.getSpecVersion`, `listSpecVersions` and an optional
+  `versionStorage`; `AnalysisPortAdapter` exposes both.
+- `DataSourceRegistry.hasAdapter` and `registeredTypes`.
+- The standard builder registers `upload` alongside `synthetic`.
+
+### Changed
+- Implements the widened `AnalysisPort` (mcp_bundle 0.4.10): every method
+  takes an optional `AnalysisActor`, which becomes the engine's
+  `RbacContext`; `listJobs`, `cancelJob`, `deleteSpec` and `listFunctions`
+  join the port. `cancelJob` moves onto the port from the adapter.
+- **`createSpec` rejects spec shapes that 0.1.4 accepted.** Each produced
+  an artifact built from nothing:
+  `spec.invalid.duplicate_step_key`, `spec.invalid.unresolved_output_source`,
+  `spec.invalid.unknown_result_field`, `spec.invalid.unresolved_step_input`,
+  `spec.invalid.step_input_order`. An output may also read the keys a
+  streaming job emits from its window — `windowState`, `pointCount`,
+  `lateDropped`, `overflowDropped` (`SpecValidator.engineSuppliedResultKeys`)
+  — which no step produces.
+- A chart built with no named field labels its axes `index` and `value`.
+- `analysis_options.yaml` added; the package is `dart analyze` and
+  `dart format` clean.
+- `mcp_bundle` floor raised to `^0.4.10` for the analysis contract this
+  release uses. Dev floors: `lints ^6.1.0`, `mockito ^5.8.1`,
+  `test ^1.31.2`.
+
+### Fixed
+- `getArtifacts(jobId:)` and `getArtifacts(tags:)` filter. Artifacts record
+  `provenance.jobId`, and the store applies every filter itself rather than
+  passing it to the storage as criteria.
+- An output bound to a step carries that step's results; a metric no longer
+  reports `0.0` for an unresolved binding.
+- An output bound to a result field the run did not produce yields no
+  artifact and records `artifact.unproduced_field` on the job. A
+  conditional field — `criticalValue` for one test but not another,
+  `bandPowers` only when bands were requested — is declared by the function
+  and so passes validation; building the artifact anyway reported `0.0`
+  for a number nobody computed.
+- Two steps calling one function keep both results, keyed by
+  `AnalysisStep.resultKey`.
+- Chart artifacts carry their series.
+- Alert artifacts take their severity from the function's result or the
+  output's `parameters`.
+- Uploaded JSON is parsed with `dart:convert`: escape sequences, unicode,
+  nested values and numeric formats are preserved, malformed input raises
+  `source.schema_mismatch`, and parsing always terminates.
+- Uploaded CSV is read per RFC 4180: quoted fields may hold the delimiter,
+  a newline or a doubled quote; CRLF is handled; a column is typed by its
+  first present value.
+- API source errors carry the scheme, host and path, the method, and the
+  names of headers and query parameters — not the source configuration, the
+  query string or any userinfo.
+- A series or chart indexed by a numeric field keeps its points distinct:
+  the index range is normalized onto the point axis rather than scaled by a
+  fixed multiplier, which merged values less than 0.001 apart.
+- Batch and ad-hoc failures record the cause of the error they wrap.
+
 ## 0.1.4 - 2026-07-14 - Standard in-memory builder
 
 ### Added

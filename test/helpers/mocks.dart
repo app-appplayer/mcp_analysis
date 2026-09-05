@@ -129,10 +129,6 @@ class MockMetricPort implements MetricPort {
 // ============================================================================
 
 class MockAnalysisPort implements AnalysisPort {
-  final List<AnalysisSpec> specs;
-  final Map<String, AnalysisJob> jobs;
-  final List<AnalysisArtifact> artifacts;
-
   MockAnalysisPort({
     List<AnalysisSpec>? specs,
     Map<String, AnalysisJob>? jobs,
@@ -140,18 +136,20 @@ class MockAnalysisPort implements AnalysisPort {
   })  : specs = specs ?? [],
         jobs = jobs ?? {},
         artifacts = artifacts ?? [];
+  final List<AnalysisSpec> specs;
+  final Map<String, AnalysisJob> jobs;
+  final List<AnalysisArtifact> artifacts;
 
   @override
   Future<List<AnalysisSpec>> listSpecs({
     String? search,
     int? limit,
     int? offset,
+    AnalysisActor? actor,
   }) async {
     var results = List<AnalysisSpec>.from(specs);
     if (search != null) {
-      results = results
-          .where((s) => s.specId.contains(search))
-          .toList();
+      results = results.where((s) => s.specId.contains(search)).toList();
     }
     if (offset != null && offset < results.length) {
       results = results.sublist(offset);
@@ -168,6 +166,7 @@ class MockAnalysisPort implements AnalysisPort {
     required Map<String, dynamic> parameters,
     AnalysisExecutionMode mode = AnalysisExecutionMode.batch,
     AnalysisTimeRange? timeRange,
+    AnalysisActor? actor,
   }) async {
     final job = AnalysisJob(
       jobId: 'job-mock-001',
@@ -184,8 +183,37 @@ class MockAnalysisPort implements AnalysisPort {
   }
 
   @override
-  Future<AnalysisJob?> getJob(String jobId) async {
+  Future<AnalysisJob?> getJob(String jobId, {AnalysisActor? actor}) async {
     return jobs[jobId];
+  }
+
+  @override
+  Future<List<AnalysisJob>> listJobs({
+    String? specId,
+    AnalysisJobStatus? status,
+    int? limit,
+    AnalysisActor? actor,
+  }) async {
+    var results = jobs.values.toList();
+    if (specId != null) {
+      results = results.where((j) => j.specId == specId).toList();
+    }
+    if (status != null) {
+      results = results.where((j) => j.status == status).toList();
+    }
+    if (limit != null && limit < results.length) {
+      results = results.sublist(0, limit);
+    }
+    return results;
+  }
+
+  @override
+  Future<AnalysisJob> cancelJob(String jobId, {AnalysisActor? actor}) async {
+    final job = jobs[jobId];
+    if (job == null) {
+      throw AnalysisError(code: 'job.not_found', message: 'no job "$jobId"');
+    }
+    return job;
   }
 
   @override
@@ -196,25 +224,48 @@ class MockAnalysisPort implements AnalysisPort {
     List<String>? tags,
     AnalysisTimeRange? timeRange,
     int? limit,
+    AnalysisActor? actor,
   }) async {
     return artifacts;
   }
 
   @override
-  Future<AnalysisSpec> createSpec(AnalysisSpec spec) async {
+  Future<AnalysisSpec> createSpec(
+    AnalysisSpec spec, {
+    AnalysisActor? actor,
+  }) async {
     specs.add(spec);
     return spec;
   }
 
   @override
-  Future<AnalysisSpec> updateSpec(String specId, AnalysisSpec spec) async {
+  Future<AnalysisSpec> updateSpec(
+    String specId,
+    AnalysisSpec spec, {
+    AnalysisActor? actor,
+  }) async {
     specs.removeWhere((s) => s.specId == specId);
     specs.add(spec);
     return spec;
   }
 
   @override
-  Future<AnalysisAlert> evaluateAlert(String alertRuleId) async {
+  Future<void> deleteSpec(String specId, {AnalysisActor? actor}) async {
+    specs.removeWhere((s) => s.specId == specId);
+  }
+
+  @override
+  Future<List<AnalysisFunctionInfo>> listFunctions({
+    String? search,
+    AnalysisActor? actor,
+  }) async =>
+      const [];
+
+  @override
+  Future<AnalysisAlert> evaluateAlert(
+    String alertRuleId, {
+    AnalysisActor? actor,
+  }) async {
     return AnalysisAlert(
       alertRuleId: alertRuleId,
       severity: AnalysisAlertSeverity.warn,

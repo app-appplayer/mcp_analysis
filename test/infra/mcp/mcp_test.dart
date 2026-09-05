@@ -25,11 +25,14 @@ AnalysisSpec _createTestSpec({
     analysisSteps: [
       AnalysisStep(
         function: 'descriptive_stats',
-        parameters: {'columns': ['temp']},
+        parameters: {
+          'columns': ['temp']
+        },
       ),
     ],
     outputs: [
       AnalysisOutputDef(
+        from: 'descriptive_stats',
         type: AnalysisArtifactType.metric,
         name: 'stats',
       ),
@@ -100,7 +103,7 @@ void main() {
         () async {
       final result = await handler.handleTool('analysis.list_specs', {});
 
-      expect(result, containsPair('specs', isA<List>()));
+      expect(result, containsPair('specs', isA<List<dynamic>>()));
       final specs = result['specs'] as List;
       expect(specs, isNotEmpty);
       // First spec should have the specId from our mock
@@ -114,7 +117,7 @@ void main() {
         'limit': 5,
       });
 
-      expect(result, containsPair('specs', isA<List>()));
+      expect(result, containsPair('specs', isA<List<dynamic>>()));
       final specs = result['specs'] as List;
       expect(specs, isNotEmpty);
     });
@@ -164,7 +167,7 @@ void main() {
         'jobId': 'job-001',
       });
 
-      expect(result, containsPair('artifacts', isA<List>()));
+      expect(result, containsPair('artifacts', isA<List<dynamic>>()));
       final artifacts = result['artifacts'] as List;
       expect(artifacts, isNotEmpty);
     });
@@ -181,7 +184,8 @@ void main() {
 
     // TC-008: update_spec routes to updateSpec
     test('TC-008: update_spec routes to updateSpec', () async {
-      final updatedSpec = _createTestSpec(specId: 'test-spec', version: '2.0.0');
+      final updatedSpec =
+          _createTestSpec(specId: 'test-spec', version: '2.0.0');
       final result = await handler.handleTool('analysis.update_spec', {
         'specId': 'test-spec',
         'spec': updatedSpec.toJson(),
@@ -205,7 +209,7 @@ void main() {
     test('TC-010: unknown tool returns mcp.unknown_tool error', () async {
       final result = await handler.handleTool('analysis.nonexistent', {});
 
-      expect(result, containsPair('error', isA<Map>()));
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'mcp.unknown_tool');
     });
@@ -217,7 +221,7 @@ void main() {
         'parameters': <String, dynamic>{},
       });
 
-      expect(result, containsPair('error', isA<Map>()));
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'mcp.invalid_arguments');
     });
@@ -273,14 +277,16 @@ void main() {
     // TC-012: Resolve analysis://spec/{specId} returns spec JSON
     test('TC-012: resolve analysis://spec/{specId} returns spec JSON',
         () async {
-      final result = await handler.resolveResource('analysis:///spec/test-spec');
+      final result =
+          await handler.resolveResource('analysis:///spec/test-spec');
 
       expect(result, containsPair('specId', 'test-spec'));
       expect(result, containsPair('version', '1.0.0'));
     });
 
     // TC-013: Resolve analysis://artifact/{artifactId} returns artifact JSON
-    test('TC-013: resolve analysis://artifact/{artifactId} returns artifact JSON',
+    test(
+        'TC-013: resolve analysis://artifact/{artifactId} returns artifact JSON',
         () async {
       final result =
           await handler.resolveResource('analysis:///artifact/artifact-001');
@@ -293,7 +299,7 @@ void main() {
     test('TC-014: resolve analysis://catalog returns function list', () async {
       final result = await handler.resolveResource('analysis:///catalog');
 
-      expect(result, containsPair('functions', isA<List>()));
+      expect(result, containsPair('functions', isA<List<dynamic>>()));
       expect(result, containsPair('count', 1));
 
       final functions = result['functions'] as List;
@@ -357,7 +363,9 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temp']},
+            parameters: {
+              'columns': ['temp']
+            },
           ),
         ],
         outputs: [
@@ -430,7 +438,7 @@ void main() {
       expect(catalogResult, containsPair('count', 1));
 
       // Verify round-trip consistency: spec JSON can produce valid data
-      final resolvedSpecId = specResult['specId'];
+      final resolvedSpecId = specResult['specId'] as String;
       final listResult = await mockPort.listSpecs(search: resolvedSpecId);
       expect(listResult.first.specId, resolvedSpecId);
     });
@@ -454,11 +462,12 @@ void main() {
         // Every definition must have name, description, and inputSchema
         expect(def, containsPair('name', isA<String>()));
         expect(def, containsPair('description', isA<String>()));
-        expect(def, containsPair('inputSchema', isA<Map>()));
+        expect(def, containsPair('inputSchema', isA<Map<dynamic, dynamic>>()));
 
         final schema = def['inputSchema'] as Map<String, dynamic>;
         expect(schema, containsPair('type', 'object'));
-        expect(schema, containsPair('properties', isA<Map>()));
+        expect(
+            schema, containsPair('properties', isA<Map<dynamic, dynamic>>()));
 
         // Track that we found this tool
         expectedTools.remove(def['name']);
@@ -634,8 +643,7 @@ void main() {
       );
 
       expect(
-        () => handler.resolveResource(
-            'analysis:///spec/test-spec/v/9.9.9'),
+        () => handler.resolveResource('analysis:///spec/test-spec/v/9.9.9'),
         throwsA(
           isA<AnalysisError>().having(
             (e) => e.code,
@@ -726,8 +734,8 @@ void main() {
     // TC-022: Non-existent job throws mcp.resource_not_found
     test('TC-022: non-existent job throws mcp.resource_not_found', () async {
       expect(
-        () => resourceHandler
-            .resolveResource('analysis:///job/nonexistent-job'),
+        () =>
+            resourceHandler.resolveResource('analysis:///job/nonexistent-job'),
         throwsA(
           isA<AnalysisError>().having(
             (e) => e.code,
@@ -772,10 +780,11 @@ void main() {
     });
 
     // TC-021 (spec): Resolve analysis://spec/{specId}/v/{version} URI
-    test('TC-021: resolve analysis://spec/{specId}/v/{version} returns versioned spec',
+    test(
+        'TC-021: resolve analysis://spec/{specId}/v/{version} returns versioned spec',
         () async {
-      final result = await handler
-          .resolveResource('analysis:///spec/test-spec/v/1.0.0');
+      final result =
+          await handler.resolveResource('analysis:///spec/test-spec/v/1.0.0');
 
       expect(result, containsPair('specId', 'test-spec'));
       expect(result, containsPair('version', '1.0.0'));
@@ -783,8 +792,7 @@ void main() {
 
     // TC-022 (spec): Resolve analysis://job/{jobId} URI
     test('TC-022: resolve analysis://job/{jobId} returns job JSON', () async {
-      final result =
-          await handler.resolveResource('analysis:///job/job-001');
+      final result = await handler.resolveResource('analysis:///job/job-001');
 
       expect(result, containsPair('jobId', 'job-001'));
       expect(result, containsPair('status', 'completed'));
@@ -816,7 +824,8 @@ void main() {
     });
 
     // TC-023 (spec): analysis.run records audit log (recordExecution called)
-    test('TC-023: analysis.run records audit log via recordExecution', () async {
+    test('TC-023: analysis.run records audit log via recordExecution',
+        () async {
       const ctx = RbacContext(actorId: 'eng-1', role: 'engineer');
 
       await handler.handleTool(
@@ -889,7 +898,7 @@ void main() {
     // Missing jobId in get_job returns error
     test('missing jobId in get_job returns mcp.invalid_arguments', () async {
       final result = await handler.handleTool('analysis.get_job', {});
-      expect(result, containsPair('error', isA<Map>()));
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'mcp.invalid_arguments');
     });
@@ -897,7 +906,7 @@ void main() {
     // Missing spec in create_spec returns error
     test('missing spec in create_spec returns mcp.invalid_arguments', () async {
       final result = await handler.handleTool('analysis.create_spec', {});
-      expect(result, containsPair('error', isA<Map>()));
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'mcp.invalid_arguments');
     });
@@ -908,17 +917,16 @@ void main() {
       final result = await handler.handleTool('analysis.update_spec', {
         'spec': _createTestSpec().toJson(),
       });
-      expect(result, containsPair('error', isA<Map>()));
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'mcp.invalid_arguments');
     });
 
-    test('missing spec in update_spec returns mcp.invalid_arguments',
-        () async {
+    test('missing spec in update_spec returns mcp.invalid_arguments', () async {
       final result = await handler.handleTool('analysis.update_spec', {
         'specId': 'test-spec',
       });
-      expect(result, containsPair('error', isA<Map>()));
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'mcp.invalid_arguments');
     });
@@ -926,9 +934,8 @@ void main() {
     // Missing alertRuleId in evaluate_alert returns error
     test('missing alertRuleId in evaluate_alert returns mcp.invalid_arguments',
         () async {
-      final result =
-          await handler.handleTool('analysis.evaluate_alert', {});
-      expect(result, containsPair('error', isA<Map>()));
+      final result = await handler.handleTool('analysis.evaluate_alert', {});
+      expect(result, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = result['error'] as Map<String, dynamic>;
       expect(error['code'], 'mcp.invalid_arguments');
     });
@@ -948,7 +955,7 @@ void main() {
         'jobId': 'job-001',
         'maskConfig': {'name': true},
       });
-      expect(result, containsPair('artifacts', isA<List>()));
+      expect(result, containsPair('artifacts', isA<List<dynamic>>()));
     });
 
     // getArtifacts with type and tags filter
@@ -958,7 +965,7 @@ void main() {
         'tags': ['test'],
         'limit': 10,
       });
-      expect(result, containsPair('artifacts', isA<List>()));
+      expect(result, containsPair('artifacts', isA<List<dynamic>>()));
     });
 
     // RBAC check on listSpecs with rbacContext
@@ -969,7 +976,7 @@ void main() {
         {'search': 'test'},
         rbacContext: ctx,
       );
-      expect(result, containsPair('specs', isA<List>()));
+      expect(result, containsPair('specs', isA<List<dynamic>>()));
     });
 
     // RBAC check on getJob with rbacContext
@@ -991,7 +998,7 @@ void main() {
         {},
         rbacContext: ctx,
       );
-      expect(result, containsPair('artifacts', isA<List>()));
+      expect(result, containsPair('artifacts', isA<List<dynamic>>()));
     });
 
     // RBAC check on createSpec with rbacContext

@@ -21,10 +21,11 @@ void main() {
 
   final source = SyntheticSourceAdapter();
 
-  AnalysisDataSet wrap(List<double> xs, [String name = 'v']) =>
-      AnalysisDataSet(
+  AnalysisDataSet wrap(List<double> xs, [String name = 'v']) => AnalysisDataSet(
         columns: [AnalysisColumnInfo(name: name, type: 'double')],
-        rows: [for (final x in xs) <String, dynamic>{name: x}],
+        rows: [
+          for (final x in xs) <String, dynamic>{name: x}
+        ],
         rowCount: xs.length,
       );
 
@@ -105,8 +106,8 @@ void main() {
     // the LCR-meter/network-analyzer method from existing pieces only.
     final sweep = [8.0, 12.0, f0, 20.0, 30.0];
     for (final f in sweep) {
-      final y = await simulate(
-          {'kind': 'sine', 'amplitude': 1.0, 'frequency': f});
+      final y =
+          await simulate({'kind': 'sine', 'amplitude': 1.0, 'frequency': f});
       final lock = await LockinFunction()
           .execute({'sampleRate': fs, 'referenceFrequency': f}, wrap(y));
       final t = truth(f);

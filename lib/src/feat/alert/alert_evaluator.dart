@@ -20,9 +20,8 @@ final _simpleConditionPattern = RegExp(
 
 /// Main facade for alert condition evaluation.
 class AlertEvaluator {
-  final AlertPublisher _publisher;
-
   AlertEvaluator({required AlertPublisher publisher}) : _publisher = publisher;
+  final AlertPublisher _publisher;
 
   /// Evaluate an AlertRule against current data. Returns AnalysisAlert.
   Future<AnalysisAlert> evaluate(
@@ -187,9 +186,8 @@ class AlertEvaluator {
     for (final row in data.rows) {
       final rawValue = row[column];
       if (rawValue == null) continue;
-      final value = rawValue is num
-          ? rawValue.toDouble()
-          : double.tryParse('$rawValue');
+      final value =
+          rawValue is num ? rawValue.toDouble() : double.tryParse('$rawValue');
       if (value == null) continue;
 
       final ts = row['_timestamp'] is DateTime
@@ -224,9 +222,8 @@ class AlertEvaluator {
     for (final row in data.rows) {
       final rawValue = row[column];
       if (rawValue == null) continue;
-      final value = rawValue is num
-          ? rawValue.toDouble()
-          : double.tryParse('$rawValue');
+      final value =
+          rawValue is num ? rawValue.toDouble() : double.tryParse('$rawValue');
       if (value == null) continue;
 
       if (_compareValues(value, operator, threshold)) {
@@ -320,8 +317,7 @@ class AlertEvaluator {
 }
 
 class _ConditionResult {
+  const _ConditionResult({required this.triggered, this.value});
   final bool triggered;
   final dynamic value;
-
-  const _ConditionResult({required this.triggered, this.value});
 }

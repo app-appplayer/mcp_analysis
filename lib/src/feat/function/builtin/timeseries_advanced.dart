@@ -20,8 +20,7 @@ class AcfFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'acf',
-        description:
-            'Autocorrelation function with automatic period detection',
+        description: 'Autocorrelation function with automatic period detection',
         parameters: {
           'column': AnalysisParameterSchema(
             name: 'column',
@@ -32,6 +31,34 @@ class AcfFunction implements AnalysisFunction {
             name: 'maxLag',
             type: 'number',
             description: 'Maximum lag (default min(n/2, 500))',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'acf': AnalysisResultSchema(
+            name: 'acf',
+            type: 'array',
+            itemType: 'number',
+            description: 'Autocorrelation per lag',
+          ),
+          'detectedPeriod': AnalysisResultSchema(
+            name: 'detectedPeriod',
+            type: 'number',
+            description: 'Period in samples',
+          ),
+          'periodConfidence': AnalysisResultSchema(
+            name: 'periodConfidence',
+            type: 'number',
+            description: 'Confidence in the period, 0..1',
+          ),
+          'significanceLevel': AnalysisResultSchema(
+            name: 'significanceLevel',
+            type: 'number',
+            description: 'Significance threshold',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -54,8 +81,7 @@ class AcfFunction implements AnalysisFunction {
 
     final mean = _mean(x);
     final centered = [for (final v in x) v - mean];
-    final denom =
-        centered.map((v) => v * v).reduce((a, b) => a + b);
+    final denom = centered.map((v) => v * v).reduce((a, b) => a + b);
 
     final acf = List<double>.filled(maxLag + 1, 0.0);
     if (denom > 0) {
@@ -116,6 +142,36 @@ class CrossCorrelationFunction implements AnalysisFunction {
             name: 'maxLag',
             type: 'number',
             description: 'Maximum |lag| (default min(n/2, 200))',
+          ),
+        },
+        results: const {
+          'columns': AnalysisResultSchema(
+            name: 'columns',
+            type: 'array',
+            itemType: 'string',
+            description: 'The two analyzed columns',
+          ),
+          'lags': AnalysisResultSchema(
+            name: 'lags',
+            type: 'array',
+            itemType: 'number',
+            description: 'Lag axis in samples',
+          ),
+          'correlations': AnalysisResultSchema(
+            name: 'correlations',
+            type: 'array',
+            itemType: 'number',
+            description: 'Correlation per lag',
+          ),
+          'bestLag': AnalysisResultSchema(
+            name: 'bestLag',
+            type: 'number',
+            description: 'Lag of the highest correlation',
+          ),
+          'bestCorrelation': AnalysisResultSchema(
+            name: 'bestCorrelation',
+            type: 'number',
+            description: 'Highest correlation',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -214,9 +270,26 @@ class ChangepointCusumFunction implements AnalysisFunction {
           'baselineWindow': AnalysisParameterSchema(
             name: 'baselineWindow',
             type: 'number',
-            description:
-                'Calibration window for the baseline mean/std '
+            description: 'Calibration window for the baseline mean/std '
                 '(default min(50, n/4); monitoring starts after it)',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'changepoints': AnalysisResultSchema(
+            name: 'changepoints',
+            type: 'array',
+            itemType: 'number',
+            description: 'Sample index of each changepoint',
+          ),
+          'count': AnalysisResultSchema(
+            name: 'count',
+            type: 'number',
+            description: 'Number of changepoints',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -297,8 +370,7 @@ class HoltWintersFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'holt_winters',
-        description:
-            'Additive Holt–Winters exponential-smoothing forecast',
+        description: 'Additive Holt–Winters exponential-smoothing forecast',
         parameters: {
           'column': AnalysisParameterSchema(
             name: 'column',
@@ -334,6 +406,34 @@ class HoltWintersFunction implements AnalysisFunction {
             type: 'number',
             defaultValue: 0.1,
             description: 'Seasonal smoothing factor',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'forecast': AnalysisResultSchema(
+            name: 'forecast',
+            type: 'array',
+            itemType: 'number',
+            description: 'Forecast horizon',
+          ),
+          'fittedLast': AnalysisResultSchema(
+            name: 'fittedLast',
+            type: 'number',
+            description: 'Last fitted value',
+          ),
+          'level': AnalysisResultSchema(
+            name: 'level',
+            type: 'number',
+            description: 'Final level',
+          ),
+          'trend': AnalysisResultSchema(
+            name: 'trend',
+            type: 'number',
+            description: 'Final trend',
           ),
         },
         supportedDataTypes: ['double', 'int'],

@@ -33,6 +33,7 @@ AnalysisSpec _createSpec({
     ],
     outputs: [
       AnalysisOutputDef(
+        from: 'descriptive_stats',
         type: AnalysisArtifactType.metric,
         name: 'stats',
       ),
@@ -236,6 +237,7 @@ void main() {
         ],
         outputs: [
           AnalysisOutputDef(
+            from: 'descriptive_stats',
             type: AnalysisArtifactType.metric,
             name: 'stats',
           ),
@@ -345,7 +347,9 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['x']},
+            parameters: {
+              'columns': ['x']
+            },
           ),
         ],
         outputs: [
@@ -401,8 +405,7 @@ void main() {
             i.code == 'spec.invalid.unknown_function' &&
             i.message.contains('unknown_function')),
         isTrue,
-        reason:
-            'Should report unknown_function not found in available catalog',
+        reason: 'Should report unknown_function not found in available catalog',
       );
     });
   });
@@ -433,7 +436,9 @@ void main() {
       expect(result, equals('min=10, max=100, unit=F'));
     });
 
-    test('substituteInString returns template unchanged when no parameters match', () {
+    test(
+        'substituteInString returns template unchanged when no parameters match',
+        () {
       final result = resolver.substituteInString(
         'no placeholders here',
         {'threshold': 0.5},
@@ -465,7 +470,8 @@ void main() {
       expect(result, equals(''));
     });
 
-    test('substituteInString replaces repeated occurrences of same parameter', () {
+    test('substituteInString replaces repeated occurrences of same parameter',
+        () {
       final result = resolver.substituteInString(
         '\${x} + \${x} = 2*\${x}',
         {'x': 5},

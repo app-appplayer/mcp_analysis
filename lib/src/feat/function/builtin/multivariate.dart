@@ -18,8 +18,7 @@ class PcaFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'pca',
-        description:
-            'Principal component analysis (Jacobi eigendecomposition)',
+        description: 'Principal component analysis (Jacobi eigendecomposition)',
         parameters: {
           'columns': AnalysisParameterSchema(
             name: 'columns',
@@ -36,6 +35,38 @@ class PcaFunction implements AnalysisFunction {
             type: 'boolean',
             defaultValue: true,
             description: 'Correlation-matrix PCA (z-scored inputs)',
+          ),
+        },
+        results: const {
+          'columns': AnalysisResultSchema(
+            name: 'columns',
+            type: 'array',
+            itemType: 'string',
+            description: 'Analyzed columns',
+          ),
+          'explainedVariance': AnalysisResultSchema(
+            name: 'explainedVariance',
+            type: 'array',
+            itemType: 'number',
+            description: 'Variance per component',
+          ),
+          'explainedVarianceRatio': AnalysisResultSchema(
+            name: 'explainedVarianceRatio',
+            type: 'array',
+            itemType: 'number',
+            description: 'Variance share per component',
+          ),
+          'components': AnalysisResultSchema(
+            name: 'components',
+            type: 'array',
+            itemType: 'object',
+            description: 'Component loadings',
+          ),
+          'scores': AnalysisResultSchema(
+            name: 'scores',
+            type: 'array',
+            itemType: 'object',
+            description: 'Projected rows',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -98,11 +129,12 @@ class PcaFunction implements AnalysisFunction {
     // Sort descending by eigenvalue.
     final order = List<int>.generate(k, (i) => i)
       ..sort((a, b) => eigenvalues[b].compareTo(eigenvalues[a]));
-    final keep = math.min(
-        (parameters['components'] as num?)?.toInt() ?? k, k);
+    final keep = math.min((parameters['components'] as num?)?.toInt() ?? k, k);
     final total = eigenvalues.fold(0.0, (a, b) => a + math.max(b, 0.0));
 
-    final explained = [for (var c = 0; c < keep; c++) math.max(eigenvalues[order[c]], 0.0)];
+    final explained = [
+      for (var c = 0; c < keep; c++) math.max(eigenvalues[order[c]], 0.0)
+    ];
     final components = [
       for (var c = 0; c < keep; c++)
         [for (var j = 0; j < k; j++) eigenvectors[j][order[c]]],
@@ -195,8 +227,7 @@ class LombScargleFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'lomb_scargle',
-        description:
-            'Lomb–Scargle periodogram for unevenly sampled series',
+        description: 'Lomb–Scargle periodogram for unevenly sampled series',
         parameters: {
           'columns': AnalysisParameterSchema(
             name: 'columns',
@@ -221,6 +252,44 @@ class LombScargleFunction implements AnalysisFunction {
             description: 'Frequency grid resolution',
           ),
         },
+        results: const {
+          'columns': AnalysisResultSchema(
+            name: 'columns',
+            type: 'array',
+            itemType: 'string',
+            description: 'Time and value columns',
+          ),
+          'frequencies': AnalysisResultSchema(
+            name: 'frequencies',
+            type: 'array',
+            itemType: 'number',
+            unit: 'Hz',
+            description: 'Frequency grid',
+          ),
+          'power': AnalysisResultSchema(
+            name: 'power',
+            type: 'array',
+            itemType: 'number',
+            description: 'Lomb-Scargle power',
+          ),
+          'bestFrequency': AnalysisResultSchema(
+            name: 'bestFrequency',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Peak frequency',
+          ),
+          'bestPeriod': AnalysisResultSchema(
+            name: 'bestPeriod',
+            type: 'number',
+            unit: 's',
+            description: 'Peak period',
+          ),
+          'bestPower': AnalysisResultSchema(
+            name: 'bestPower',
+            type: 'number',
+            description: 'Power at the peak',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -239,20 +308,18 @@ class LombScargleFunction implements AnalysisFunction {
     final n = math.min(t.length, y.length);
     if (n < 8) throw ArgumentError('lomb_scargle requires ≥ 8 samples');
 
-    final span = t.sublist(0, n).reduce(math.max) -
-        t.sublist(0, n).reduce(math.min);
+    final span =
+        t.sublist(0, n).reduce(math.max) - t.sublist(0, n).reduce(math.min);
     if (span <= 0) throw ArgumentError('lomb_scargle: zero time span');
-    final fMin =
-        (parameters['minFrequency'] as num?)?.toDouble() ?? 1.0 / span;
-    final fMax = (parameters['maxFrequency'] as num?)?.toDouble() ??
-        n / (2.0 * span);
+    final fMin = (parameters['minFrequency'] as num?)?.toDouble() ?? 1.0 / span;
+    final fMax =
+        (parameters['maxFrequency'] as num?)?.toDouble() ?? n / (2.0 * span);
     final steps =
         math.max(10, (parameters['frequencySteps'] as num?)?.toInt() ?? 500);
 
     final mean = y.sublist(0, n).reduce((a, b) => a + b) / n;
     final yc = [for (var i = 0; i < n; i++) y[i] - mean];
-    final variance =
-        yc.map((v) => v * v).reduce((a, b) => a + b) / (n - 1);
+    final variance = yc.map((v) => v * v).reduce((a, b) => a + b) / (n - 1);
 
     final freqs = <double>[];
     final power = <double>[];

@@ -496,7 +496,8 @@ void main() {
     });
 
     // Window-based evaluation with window aggregate condition syntax
-    test('TC-030: evaluateWindow with avg() condition triggers correctly', () async {
+    test('TC-030: evaluateWindow with avg() condition triggers correctly',
+        () async {
       final windowAggregator = WindowAggregator(
         windowSize: const Duration(minutes: 5),
       );
@@ -527,7 +528,8 @@ void main() {
     });
 
     // Empty dataset: no matching data
-    test('TC-031: evaluate with empty dataset returns triggered false', () async {
+    test('TC-031: evaluate with empty dataset returns triggered false',
+        () async {
       final emptyData = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: 'temperature', type: 'double'),
@@ -549,7 +551,8 @@ void main() {
     });
 
     // Null/missing column value
-    test('TC-032: evaluate with null column values returns triggered false', () async {
+    test('TC-032: evaluate with null column values returns triggered false',
+        () async {
       final nullData = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: 'temperature', type: 'double'),
@@ -574,7 +577,8 @@ void main() {
     });
 
     // Non-existent column in data
-    test('TC-033: evaluate with missing column returns triggered false', () async {
+    test('TC-033: evaluate with missing column returns triggered false',
+        () async {
       final rule = AnalysisAlertRuleArtifact(
         artifactId: 'rule-missing-col',
         name: 'Missing column test',
@@ -588,7 +592,8 @@ void main() {
     });
 
     // evaluateAll with mixed results (some trigger, some don't)
-    test('TC-034: evaluateAll returns correct mix of triggered and not', () async {
+    test('TC-034: evaluateAll returns correct mix of triggered and not',
+        () async {
       final rules = [
         AnalysisAlertRuleArtifact(
           artifactId: 'rule-trigger',
@@ -614,7 +619,8 @@ void main() {
     });
 
     // Window aggregate condition: avg(temperature, 5m) > 75
-    test('TC-035: evaluate handles window aggregate condition syntax', () async {
+    test('TC-035: evaluate handles window aggregate condition syntax',
+        () async {
       final now = DateTime.now();
       final tsData = AnalysisDataSet(
         columns: [
@@ -645,7 +651,8 @@ void main() {
     });
 
     // Window aggregate with empty matching data
-    test('TC-036: window aggregate with all null values returns not triggered', () async {
+    test('TC-036: window aggregate with all null values returns not triggered',
+        () async {
       final now = DateTime.now();
       final nullTsData = AnalysisDataSet(
         columns: [
@@ -938,7 +945,9 @@ void main() {
     });
 
     // Window aggregate with non-parseable string data
-    test('TC-049: window aggregate with non-parseable string returns not triggered', () async {
+    test(
+        'TC-049: window aggregate with non-parseable string returns not triggered',
+        () async {
       final now = DateTime.now();
       final data = AnalysisDataSet(
         columns: [
@@ -965,7 +974,8 @@ void main() {
     });
 
     // Window aggregate with invalid threshold
-    test('TC-042: window aggregate with non-numeric threshold returns false', () async {
+    test('TC-042: window aggregate with non-numeric threshold returns false',
+        () async {
       final now = DateTime.now();
       final data = AnalysisDataSet(
         columns: [
@@ -1009,7 +1019,8 @@ void main() {
     // TC-019: String comparison condition
     // Current implementation only supports numeric comparisons.
     // String conditions parse as non-numeric threshold -> triggered: false.
-    test('TC-019: string comparison condition returns false (numeric-only parser)',
+    test(
+        'TC-019: string comparison condition returns false (numeric-only parser)',
         () async {
       final data = AnalysisDataSet(
         columns: [
@@ -1252,7 +1263,8 @@ void main() {
     });
 
     // Simple condition with string numeric value in data row
-    test('TC-COV-050: simple condition with string numeric value triggers', () async {
+    test('TC-COV-050: simple condition with string numeric value triggers',
+        () async {
       final data = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: 'value', type: 'string'),
@@ -1277,7 +1289,8 @@ void main() {
     });
 
     // Simple condition with non-parseable string value
-    test('TC-COV-051: simple condition with non-parseable string skips row', () async {
+    test('TC-COV-051: simple condition with non-parseable string skips row',
+        () async {
       final data = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: 'value', type: 'string'),
@@ -1303,7 +1316,9 @@ void main() {
     });
 
     // Window condition with timestamp not being DateTime (falls back to DateTime.now())
-    test('TC-COV-052: window condition with non-DateTime timestamp uses fallback', () async {
+    test(
+        'TC-COV-052: window condition with non-DateTime timestamp uses fallback',
+        () async {
       final data = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: '_timestamp', type: 'string'),
@@ -1328,7 +1343,8 @@ void main() {
     });
 
     // Non-triggered result returns lastValue from last row
-    test('TC-COV-053: non-triggered simple condition returns last row value', () async {
+    test('TC-COV-053: non-triggered simple condition returns last row value',
+        () async {
       final data = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: 'val', type: 'double'),
@@ -1354,7 +1370,8 @@ void main() {
     });
 
     // Non-triggered evaluation does NOT publish
-    test('TC-COV-054: non-triggered evaluation does not call publisher', () async {
+    test('TC-COV-054: non-triggered evaluation does not call publisher',
+        () async {
       final rule = AnalysisAlertRuleArtifact(
         artifactId: 'rule-no-pub',
         name: 'No publish test',
@@ -1445,7 +1462,8 @@ void main() {
     });
 
     // TC-RATE-001: Event-rate condition triggered (55 errors in 5m => rate=11 > 10)
-    test('TC-RATE-001: event-rate triggered when rate exceeds threshold', () async {
+    test('TC-RATE-001: event-rate triggered when rate exceeds threshold',
+        () async {
       final now = DateTime.now();
       final rows = <Map<String, dynamic>>[];
       // 55 error rows within the window
@@ -1481,7 +1499,8 @@ void main() {
     });
 
     // TC-RATE-002: Event-rate condition NOT triggered (10 errors in 5m => rate=2 < 10)
-    test('TC-RATE-002: event-rate not triggered when rate below threshold', () async {
+    test('TC-RATE-002: event-rate not triggered when rate below threshold',
+        () async {
       final now = DateTime.now();
       final rows = <Map<String, dynamic>>[];
       // 10 error rows within the window
@@ -1549,7 +1568,8 @@ void main() {
     });
 
     // TC-RATE-004: Event-rate malformed condition (missing window) => triggered=false
-    test('TC-RATE-004: malformed event-rate condition returns triggered false', () async {
+    test('TC-RATE-004: malformed event-rate condition returns triggered false',
+        () async {
       final data = AnalysisDataSet(
         columns: [
           const AnalysisColumnInfo(name: 'status', type: 'string'),
@@ -1635,7 +1655,8 @@ void main() {
     });
 
     // TC-HOOK-001: ActionHook "form:" calls FormPort mock
-    test('TC-HOOK-001: form actionHook calls FormPort.generateReport', () async {
+    test('TC-HOOK-001: form actionHook calls FormPort.generateReport',
+        () async {
       final mockFormPort = MockAlertFormPort();
       final publisher = AlertPublisher(
         eventPort: mockEventPort,
@@ -1665,14 +1686,18 @@ void main() {
       await evaluator.evaluate(rule, data);
 
       expect(mockFormPort.calls, hasLength(1));
-      expect(mockFormPort.calls.first.templateId, equals('alert-report-template'));
-      expect(mockFormPort.calls.first.context['alertRuleId'], equals('rule-hook-form'));
+      expect(
+          mockFormPort.calls.first.templateId, equals('alert-report-template'));
+      expect(mockFormPort.calls.first.context['alertRuleId'],
+          equals('rule-hook-form'));
       expect(mockFormPort.calls.first.context['severity'], equals('critical'));
-      expect(mockFormPort.calls.first.context['condition'], equals('temperature > 80'));
+      expect(mockFormPort.calls.first.context['condition'],
+          equals('temperature > 80'));
     });
 
     // TC-HOOK-002: ActionHook unknown type => warning logged
-    test('TC-HOOK-002: unknown actionHook type publishes warning event', () async {
+    test('TC-HOOK-002: unknown actionHook type publishes warning event',
+        () async {
       final publisher = AlertPublisher(eventPort: mockEventPort);
       final evaluator = AlertEvaluator(publisher: publisher);
 
@@ -1747,7 +1772,8 @@ void main() {
     });
 
     // TC-HOOK-004: ActionHook FormPort failure is non-blocking
-    test('TC-HOOK-004: FormPort failure does not throw from evaluate', () async {
+    test('TC-HOOK-004: FormPort failure does not throw from evaluate',
+        () async {
       final mockFormPort = MockAlertFormPort()..shouldThrow = true;
       final publisher = AlertPublisher(
         eventPort: mockEventPort,
@@ -1790,7 +1816,8 @@ void main() {
     });
 
     // TC-HOOK-005: form actionHook with null FormPort logs warning
-    test('TC-HOOK-005: form actionHook without FormPort publishes warning', () async {
+    test('TC-HOOK-005: form actionHook without FormPort publishes warning',
+        () async {
       final publisher = AlertPublisher(eventPort: mockEventPort);
       final evaluator = AlertEvaluator(publisher: publisher);
 
@@ -1825,5 +1852,4 @@ void main() {
       );
     });
   });
-
 }

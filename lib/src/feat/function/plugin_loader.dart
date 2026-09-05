@@ -7,15 +7,6 @@ import 'function_dispatcher.dart';
 
 /// Plugin manifest metadata.
 class PluginManifest {
-  final String functionName;
-  final String description;
-  final String category;
-  final String version;
-  final String? supportedSpecRange;
-  final List<AnalysisParameterSchema> parameters;
-  final List<String> supportedDataTypes;
-  final Duration executionTimeout;
-
   const PluginManifest({
     required this.functionName,
     required this.description,
@@ -26,16 +17,18 @@ class PluginManifest {
     this.supportedDataTypes = const [],
     this.executionTimeout = const Duration(seconds: 60),
   });
+  final String functionName;
+  final String description;
+  final String category;
+  final String version;
+  final String? supportedSpecRange;
+  final List<AnalysisParameterSchema> parameters;
+  final List<String> supportedDataTypes;
+  final Duration executionTimeout;
 }
 
 /// Enables extensibility by loading external function plugins.
 class PluginLoader {
-  final FunctionCatalog _catalog;
-  final FunctionDispatcher _dispatcher;
-  final String currentSpecVersion;
-  final Set<String> _loadedPlugins = {};
-  final Map<String, PluginManifest> _manifests = {};
-
   PluginLoader({
     required FunctionCatalog catalog,
     required FunctionDispatcher dispatcher,
@@ -45,6 +38,11 @@ class PluginLoader {
     // Wire this loader into the dispatcher for timeout enforcement
     _dispatcher.setPluginLoader(this);
   }
+  final FunctionCatalog _catalog;
+  final FunctionDispatcher _dispatcher;
+  final String currentSpecVersion;
+  final Set<String> _loadedPlugins = {};
+  final Map<String, PluginManifest> _manifests = {};
 
   /// Load a plugin from manifest and implementation.
   void loadPlugin(PluginManifest manifest, AnalysisFunction implementation) {
@@ -68,8 +66,7 @@ class PluginLoader {
         manifest.supportedSpecRange!, currentSpecVersion)) {
       throw AnalysisError(
         code: 'plugin.incompatible_version',
-        message:
-            'Plugin "${manifest.functionName}" requires spec version '
+        message: 'Plugin "${manifest.functionName}" requires spec version '
             '${manifest.supportedSpecRange} but current is $currentSpecVersion',
         details: {
           'plugin': manifest.functionName,
@@ -82,8 +79,7 @@ class PluginLoader {
     if (_catalog.has(manifest.functionName)) {
       throw AnalysisError(
         code: 'analysis.duplicate_function',
-        message:
-            'Function "${manifest.functionName}" is already registered',
+        message: 'Function "${manifest.functionName}" is already registered',
       );
     }
 
@@ -137,13 +133,14 @@ class PluginLoader {
   ) async {
     try {
       return await plugin.execute(parameters, data).timeout(
-        timeout,
-        onTimeout: () => throw AnalysisError(
-          code: 'analysis.execution_error',
-          message: 'Plugin execution exceeded timeout of ${timeout.inSeconds}s',
-          details: {'timeout': timeout.inSeconds},
-        ),
-      );
+            timeout,
+            onTimeout: () => throw AnalysisError(
+              code: 'analysis.execution_error',
+              message:
+                  'Plugin execution exceeded timeout of ${timeout.inSeconds}s',
+              details: {'timeout': timeout.inSeconds},
+            ),
+          );
     } catch (e) {
       if (e is AnalysisError) rethrow;
       throw AnalysisError(

@@ -9,7 +9,8 @@ class DescriptiveStatsFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'descriptive_stats',
-        description: 'Compute descriptive statistics (min, max, avg, std, percentiles)',
+        description:
+            'Compute descriptive statistics (min, max, avg, std, percentiles)',
         parameters: {
           'columns': AnalysisParameterSchema(
             name: 'columns',
@@ -43,8 +44,8 @@ class DescriptiveStatsFunction implements AnalysisFunction {
     for (final col in columns) {
       final values = data.rows
           .map((r) => r[col])
-          .where((v) => v is num)
-          .map((v) => (v as num).toDouble())
+          .whereType<num>()
+          .map((v) => (v).toDouble())
           .toList();
 
       if (values.isEmpty) {
@@ -88,10 +89,9 @@ class DescriptiveStatsFunction implements AnalysisFunction {
         }
         m3 /= count;
         m4 /= count;
-        final s2 = values
-                .map((v) => (v - avg) * (v - avg))
-                .reduce((a, b) => a + b) /
-            count; // population variance for moment ratios
+        final s2 =
+            values.map((v) => (v - avg) * (v - avg)).reduce((a, b) => a + b) /
+                count; // population variance for moment ratios
         skewness = m3 / math.pow(s2, 1.5);
         kurtosis = m4 / (s2 * s2);
       }

@@ -44,6 +44,36 @@ class PeakDetectFunction implements AnalysisFunction {
             description: 'Minimum samples between accepted peaks',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'indices': AnalysisResultSchema(
+            name: 'indices',
+            type: 'array',
+            itemType: 'number',
+            description: 'Sample index of each peak',
+          ),
+          'values': AnalysisResultSchema(
+            name: 'values',
+            type: 'array',
+            itemType: 'number',
+            description: 'Value at each peak',
+          ),
+          'count': AnalysisResultSchema(
+            name: 'count',
+            type: 'number',
+            description: 'Number of peaks',
+          ),
+          'intervals': AnalysisResultSchema(
+            name: 'intervals',
+            type: 'array',
+            itemType: 'number',
+            description: 'Sample gaps between peaks',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -56,9 +86,9 @@ class PeakDetectFunction implements AnalysisFunction {
     final column = resolveColumn(parameters, data);
     final x = numericColumn(data, column);
     final minHeight = (parameters['minHeight'] as num?)?.toDouble();
-    final minProm =
-        (parameters['minProminence'] as num?)?.toDouble() ?? 0.0;
-    final minDist = math.max(1, (parameters['minDistance'] as num?)?.toInt() ?? 1);
+    final minProm = (parameters['minProminence'] as num?)?.toDouble() ?? 0.0;
+    final minDist =
+        math.max(1, (parameters['minDistance'] as num?)?.toInt() ?? 1);
 
     // Local maxima (plateau-aware: first sample of a flat top counts).
     final candidates = <int>[];
@@ -125,8 +155,7 @@ class ZeroCrossingFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'zero_crossing',
-        description:
-            'Zero-crossing locations, rate and frequency estimation',
+        description: 'Zero-crossing locations, rate and frequency estimation',
         parameters: {
           'column': AnalysisParameterSchema(
             name: 'column',
@@ -143,6 +172,38 @@ class ZeroCrossingFunction implements AnalysisFunction {
             type: 'string',
             defaultValue: 'both',
             description: 'both | rising | falling',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'indices': AnalysisResultSchema(
+            name: 'indices',
+            type: 'array',
+            itemType: 'number',
+            description: 'Sample index of each crossing',
+          ),
+          'count': AnalysisResultSchema(
+            name: 'count',
+            type: 'number',
+            description: 'Number of crossings',
+          ),
+          'crossingRate': AnalysisResultSchema(
+            name: 'crossingRate',
+            type: 'number',
+            unit: '/s',
+            description: 'Crossings per second; present when sampleRate is '
+                'given',
+          ),
+          'estimatedFrequency': AnalysisResultSchema(
+            name: 'estimatedFrequency',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Frequency from the mean rising-edge period; '
+                'present when at least two rising edges are found',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -180,8 +241,7 @@ class ZeroCrossingFunction implements AnalysisFunction {
           for (var k = 1; k < rising.length; k++)
             (rising[k] - rising[k - 1]) / fs,
         ];
-        final meanPeriod =
-            periods.reduce((a, b) => a + b) / periods.length;
+        final meanPeriod = periods.reduce((a, b) => a + b) / periods.length;
         estimatedFrequency = meanPeriod > 0 ? 1 / meanPeriod : null;
       }
     }

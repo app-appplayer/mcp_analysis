@@ -15,9 +15,14 @@ abstract interface class JobOperations {
   Future<List<AnalysisJob>> listJobs();
   Future<void> updateProgress(String jobId, double progress);
 
-  /// AnalysisJob uses artifactIds: List<String>, not List<AnalysisArtifact>.
-  Future<AnalysisJob> completeJob(String jobId, {required List<String> artifactIds, List<AnalysisError> errors, List<AnalysisJobLog> logs});
-  Future<AnalysisJob> failJob(String jobId, {List<AnalysisError> errors, List<AnalysisJobLog> logs});
+  /// AnalysisJob uses artifactIds: `List<String>`, not
+  /// `List<AnalysisArtifact>`.
+  Future<AnalysisJob> completeJob(String jobId,
+      {required List<String> artifactIds,
+      List<AnalysisError> errors,
+      List<AnalysisJobLog> logs});
+  Future<AnalysisJob> failJob(String jobId,
+      {List<AnalysisError> errors, List<AnalysisJobLog> logs});
   Future<AnalysisJob> cancelJob(String jobId);
   Future<void> addError(String jobId, AnalysisError error);
 }

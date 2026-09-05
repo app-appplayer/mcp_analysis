@@ -6,14 +6,13 @@ import 'datasource_registry.dart';
 
 /// Bridges analysis data source interface to FactsPort for fact graph data.
 class FactGraphSourceAdapter extends DataSourceAdapter {
-  final FactsPort _factsPort;
-  final String _workspaceId;
-
   FactGraphSourceAdapter({
     required FactsPort factsPort,
     required String workspaceId,
   })  : _factsPort = factsPort,
         _workspaceId = workspaceId;
+  final FactsPort _factsPort;
+  final String _workspaceId;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;

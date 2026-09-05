@@ -11,12 +11,11 @@ import '../../helpers/test_data.dart';
 
 class FakeDataSourceAdapter extends DataSourceAdapter
     with StreamableDataSource {
+  FakeDataSourceAdapter({this.dataSet});
   AnalysisDataSet? dataSet;
   bool shouldFail = false;
   String failCode = 'source.unavailable';
   String failMessage = 'Source unavailable';
-
-  FakeDataSourceAdapter({this.dataSet});
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;
@@ -63,9 +62,6 @@ class FakeDataSourceAdapter extends DataSourceAdapter
 // ============================================================================
 
 class FakeAnalysisFunction implements AnalysisFunction {
-  final String functionName;
-  final Map<String, dynamic> result;
-
   FakeAnalysisFunction({
     required this.functionName,
     Map<String, dynamic>? result,
@@ -75,6 +71,8 @@ class FakeAnalysisFunction implements AnalysisFunction {
               'stddev': 5.0,
               'count': 5,
             };
+  final String functionName;
+  final Map<String, dynamic> result;
 
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
@@ -108,19 +106,6 @@ class FakeAnalysisFunction implements AnalysisFunction {
 // ============================================================================
 
 class _BatchTestFixture {
-  final InMemoryStorage<AnalysisJob> jobStorage;
-  final InMemoryStorage<AnalysisArtifact> artifactStorage;
-  final JobManager jobManager;
-  final DataSourceRegistry dataSourceRegistry;
-  final TransformPipeline transformPipeline;
-  final FunctionDispatcher functionDispatcher;
-  final ArtifactBuilder artifactBuilder;
-  final ArtifactStore artifactStore;
-  final ProvenanceTracker provenanceTracker;
-  final AlertEvaluator alertEvaluator;
-  final MockEventPort eventPort;
-  final BatchExecutor executor;
-
   _BatchTestFixture._({
     required this.jobStorage,
     required this.artifactStorage,
@@ -184,6 +169,18 @@ class _BatchTestFixture {
       executor: executor,
     );
   }
+  final InMemoryStorage<AnalysisJob> jobStorage;
+  final InMemoryStorage<AnalysisArtifact> artifactStorage;
+  final JobManager jobManager;
+  final DataSourceRegistry dataSourceRegistry;
+  final TransformPipeline transformPipeline;
+  final FunctionDispatcher functionDispatcher;
+  final ArtifactBuilder artifactBuilder;
+  final ArtifactStore artifactStore;
+  final ProvenanceTracker provenanceTracker;
+  final AlertEvaluator alertEvaluator;
+  final MockEventPort eventPort;
+  final BatchExecutor executor;
 
   /// Create a job in running state for the given spec.
   Future<AnalysisJob> createRunningJob({
@@ -223,12 +220,15 @@ AnalysisSpec _createBatchSpec({
         [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
     outputs: outputs ??
         [
           AnalysisOutputDef(
+            from: 'descriptive_stats',
             type: AnalysisArtifactType.metric,
             name: 'temperature_stats',
           ),
@@ -308,7 +308,10 @@ void main() {
             const AnalysisColumnInfo(name: 'temperature', type: 'double'),
           ],
           rows: [
-            {'_timestamp': now.subtract(const Duration(minutes: 2)), 'temperature': 70.0},
+            {
+              '_timestamp': now.subtract(const Duration(minutes: 2)),
+              'temperature': 70.0
+            },
           ],
           rowCount: 1,
         ),
@@ -320,7 +323,10 @@ void main() {
             const AnalysisColumnInfo(name: 'humidity', type: 'double'),
           ],
           rows: [
-            {'_timestamp': now.subtract(const Duration(minutes: 1)), 'humidity': 55.0},
+            {
+              '_timestamp': now.subtract(const Duration(minutes: 1)),
+              'humidity': 55.0
+            },
           ],
           rowCount: 1,
         ),
@@ -417,8 +423,7 @@ void main() {
       expect(result.errors, isNotEmpty);
       expect(
         result.errors.any((e) =>
-            e.code == 'source.unavailable' ||
-            e.code == 'job.retry_exhausted'),
+            e.code == 'source.unavailable' || e.code == 'job.retry_exhausted'),
         isTrue,
       );
     });
@@ -451,8 +456,7 @@ void main() {
       expect(result.status, equals(AnalysisJobStatus.failed));
       expect(
         result.errors.any((e) =>
-            e.code == 'source.unavailable' ||
-            e.code == 'job.retry_exhausted'),
+            e.code == 'source.unavailable' || e.code == 'job.retry_exhausted'),
         isTrue,
       );
     });
@@ -510,7 +514,7 @@ void main() {
       );
       final anomalyFunction = FakeAnalysisFunction(
         functionName: 'anomaly_detect',
-        result: {'anomalies': [], 'score': 0.1},
+        result: {'anomalies': <dynamic>[], 'score': 0.1},
       );
       f.functionDispatcher.registerBuiltins([statsFunction, anomalyFunction]);
 
@@ -518,11 +522,15 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
           AnalysisStep(
             function: 'anomaly_detect',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [
@@ -773,8 +781,7 @@ void main() {
       expect(result.status, equals(AnalysisJobStatus.failed));
       expect(
         result.errors.any((e) =>
-            e.code == 'source.unavailable' ||
-            e.code == 'job.retry_exhausted'),
+            e.code == 'source.unavailable' || e.code == 'job.retry_exhausted'),
         isTrue,
       );
     });
@@ -846,7 +853,10 @@ void main() {
         transforms: [
           AnalysisTransform(
             name: 'sort',
-            parameters: {'columns': ['_timestamp'], 'ascending': true},
+            parameters: {
+              'columns': ['_timestamp'],
+              'ascending': true
+            },
           ),
         ],
       );
@@ -969,14 +979,13 @@ void main() {
 
 /// Adapter that fails a specified number of times before succeeding.
 class _RetryTestAdapter extends DataSourceAdapter with StreamableDataSource {
-  final int failCount;
-  final AnalysisDataSet successData;
-  int callCount = 0;
-
   _RetryTestAdapter({
     required this.failCount,
     required this.successData,
   });
+  final int failCount;
+  final AnalysisDataSet successData;
+  int callCount = 0;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;
@@ -1022,13 +1031,12 @@ class _RetryTestAdapter extends DataSourceAdapter with StreamableDataSource {
 /// Adapter that introduces a delay (for timeout testing).
 class _SlowDataSourceAdapter extends DataSourceAdapter
     with StreamableDataSource {
-  final Duration delay;
-  final AnalysisDataSet dataSet;
-
   _SlowDataSourceAdapter({
     required this.delay,
     required this.dataSet,
   });
+  final Duration delay;
+  final AnalysisDataSet dataSet;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;

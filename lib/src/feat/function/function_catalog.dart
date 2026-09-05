@@ -9,8 +9,7 @@ class FunctionCatalog {
     if (_functions.containsKey(info.functionName)) {
       throw AnalysisError(
         code: 'analysis.duplicate_function',
-        message:
-            'Function "${info.functionName}" is already registered',
+        message: 'Function "${info.functionName}" is already registered',
       );
     }
     _functions[info.functionName] = info;

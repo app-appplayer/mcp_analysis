@@ -62,8 +62,7 @@ void main() {
     }
   });
 
-  test('long-stream drift stays bounded (200K points through the window)',
-      () {
+  test('long-stream drift stays bounded (200K points through the window)', () {
     final rng = Random(23);
     final agg = WindowAggregator(windowSize: const Duration(seconds: 1000));
     final live = <double>[];
@@ -88,7 +87,8 @@ void main() {
     final agg = WindowAggregator(windowSize: const Duration(minutes: 5));
     agg.add(AnalysisTimePoint(t: base, v: 10.0));
     agg.add(AnalysisTimePoint(t: base.add(const Duration(seconds: 1)), v: 'x'));
-    agg.add(AnalysisTimePoint(t: base.add(const Duration(seconds: 2)), v: 20.0));
+    agg.add(
+        AnalysisTimePoint(t: base.add(const Duration(seconds: 2)), v: 20.0));
 
     expect(agg.aggregate('v', 'count'), 3.0);
     expect(agg.aggregate('v', 'sum'), 30.0);
@@ -117,12 +117,10 @@ void main() {
       () {
     final agg = WindowAggregator(windowSize: const Duration(seconds: 10));
     for (var i = 0; i < 50; i++) {
-      agg.add(AnalysisTimePoint(
-          t: base.add(Duration(seconds: i)), v: 123.456));
+      agg.add(AnalysisTimePoint(t: base.add(Duration(seconds: i)), v: 123.456));
     }
     // A far-future point evicts everything previous.
-    agg.add(AnalysisTimePoint(
-        t: base.add(const Duration(days: 1)), v: 5.0));
+    agg.add(AnalysisTimePoint(t: base.add(const Duration(days: 1)), v: 5.0));
     expect(agg.aggregate('v', 'count'), 1.0);
     expect(agg.aggregate('v', 'sum'), 5.0);
     expect(agg.aggregate('v', 'avg'), 5.0);

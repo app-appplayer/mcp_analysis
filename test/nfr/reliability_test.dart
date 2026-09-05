@@ -176,10 +176,8 @@ void main() {
 
       // Verify delays increase (with some tolerance for timing)
       if (timestamps.length >= 3) {
-        final delay1 =
-            timestamps[1].difference(timestamps[0]).inMilliseconds;
-        final delay2 =
-            timestamps[2].difference(timestamps[1]).inMilliseconds;
+        final delay1 = timestamps[1].difference(timestamps[0]).inMilliseconds;
+        final delay2 = timestamps[2].difference(timestamps[1]).inMilliseconds;
         // Second delay should be larger than first (backoff)
         expect(delay2, greaterThan(delay1 * 0.8));
       }
@@ -513,7 +511,9 @@ void main() {
       for (var i = 0; i < 3; i++) {
         final result = await dispatcher.executeFunction(
           functionName: 'descriptive_stats',
-          parameters: {'columns': ['temperature']},
+          parameters: {
+            'columns': ['temperature']
+          },
           data: data,
         );
         results.add(result);
@@ -541,7 +541,9 @@ void main() {
       for (var i = 0; i < 3; i++) {
         final result = await dispatcher.executeFunction(
           functionName: 'descriptive_stats',
-          parameters: {'columns': ['temperature']},
+          parameters: {
+            'columns': ['temperature']
+          },
           data: data,
         );
         serializedResults.add(jsonEncode(result.results));
@@ -567,8 +569,7 @@ void main() {
         expect(provenances[i].specId, equals(provenances[0].specId));
         expect(provenances[i].specVersion, equals(provenances[0].specVersion));
         expect(provenances[i].sourceUri, equals(provenances[0].sourceUri));
-        expect(
-            provenances[i].sourceQuery, equals(provenances[0].sourceQuery));
+        expect(provenances[i].sourceQuery, equals(provenances[0].sourceQuery));
       }
     });
   });
@@ -739,9 +740,8 @@ void main() {
 
 /// A data source adapter that always succeeds with test data.
 class _SuccessfulAdapter implements DataSourceAdapter {
-  final String value;
-
   _SuccessfulAdapter({required this.value});
+  final String value;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;
@@ -768,10 +768,9 @@ class _SuccessfulAdapter implements DataSourceAdapter {
 
 /// A data source adapter that always fails with a specific error.
 class _FailingAdapter implements DataSourceAdapter {
+  _FailingAdapter({required this.errorCode, required this.errorMessage});
   final String errorCode;
   final String errorMessage;
-
-  _FailingAdapter({required this.errorCode, required this.errorMessage});
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;

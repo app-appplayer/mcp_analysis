@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:mcp_bundle/ports.dart';
 
 import 'datasource_registry.dart';
@@ -56,23 +58,16 @@ class UploadSourceAdapter extends DataSourceAdapter {
   }
 
   AnalysisDataSet _parseCsv(String content) {
-    final lines = content
-        .split('\n')
-        .map((l) => l.trim())
-        .where((l) => l.isNotEmpty)
-        .toList();
+    final records = _csvRecords(content);
 
-    if (lines.isEmpty) {
+    if (records.isEmpty) {
       return AnalysisDataSet(columns: [], rows: [], rowCount: 0);
     }
 
-    // Detect delimiter
-    final delimiter = _detectDelimiter(lines.first);
-    final headers = lines.first.split(delimiter).map((h) => h.trim()).toList();
-
+    final headers = records.first;
     final rows = <Map<String, dynamic>>[];
-    for (var i = 1; i < lines.length; i++) {
-      final values = lines[i].split(delimiter).map((v) => v.trim()).toList();
+    for (var i = 1; i < records.length; i++) {
+      final values = records[i];
       if (values.length != headers.length) {
         throw AnalysisError(
           code: 'source.schema_mismatch',
@@ -89,14 +84,17 @@ class UploadSourceAdapter extends DataSourceAdapter {
       rows.add(row);
     }
 
-    // Infer column types from data
+    // Infer each column from its first value that is actually there. The
+    // first row alone types a column by whatever it happens to hold, so a
+    // leading blank made every later number a string.
     final columns = headers.map((h) {
-      String type = 'string';
-      if (rows.isNotEmpty) {
-        final value = rows.first[h];
-        type = _inferType(value);
+      for (final row in rows) {
+        final value = row[h];
+        if (value != null) {
+          return AnalysisColumnInfo(name: h, type: _inferType(value));
+        }
       }
-      return AnalysisColumnInfo(name: h, type: type);
+      return AnalysisColumnInfo(name: h, type: 'string');
     }).toList();
 
     return AnalysisDataSet(
@@ -115,10 +113,13 @@ class UploadSourceAdapter extends DataSourceAdapter {
       );
     }
 
-    // Simple JSON array parsing
-    // In production, would use dart:convert
+    // dart:convert, not a hand parser. The one this replaced dropped
+    // escape sequences (`\n` arrived as `n`), accepted truncated input
+    // without complaint, and looped without end on a tab where it expected
+    // a value — synchronously, so a `Future.timeout` could not stop it.
+    // Upload content is by definition not trusted.
     try {
-      final decoded = _simpleJsonParse(trimmed);
+      final decoded = jsonDecode(trimmed);
       if (decoded is! List) {
         throw AnalysisError(
           code: 'source.schema_mismatch',
@@ -148,6 +149,12 @@ class UploadSourceAdapter extends DataSourceAdapter {
         rows: rows,
         rowCount: rows.length,
       );
+    } on FormatException catch (e) {
+      throw AnalysisError(
+        code: 'source.schema_mismatch',
+        message: 'Failed to parse JSON: ${e.message}',
+        details: {if (e.offset != null) 'offset': e.offset},
+      );
     } catch (e) {
       if (e is AnalysisError) rethrow;
       throw AnalysisError(
@@ -157,94 +164,69 @@ class UploadSourceAdapter extends DataSourceAdapter {
     }
   }
 
-  dynamic _simpleJsonParse(String content) {
-    // Use dart:convert for real parsing
-    // This is a placeholder that delegates to a basic parser
-    return _parseJsonValue(content.trim(), 0).value;
-  }
+  /// Split [content] into records and fields per RFC 4180.
+  ///
+  /// A quoted field may hold the delimiter, a newline, and `""` for a
+  /// literal quote. Splitting on the delimiter — which is what this
+  /// replaced — turned `"Smith, John"` into two fields and rejected the
+  /// row for having the wrong field count.
+  List<List<String>> _csvRecords(String content) {
+    final normalized = content.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+    final firstLineEnd = normalized.indexOf('\n');
+    final header =
+        firstLineEnd < 0 ? normalized : normalized.substring(0, firstLineEnd);
+    final delimiter = _detectDelimiter(header);
 
-  _JsonParseResult _parseJsonValue(String s, int pos) {
-    while (pos < s.length && s[pos] == ' ') pos++;
-    if (pos >= s.length) return _JsonParseResult(null, pos);
+    final records = <List<String>>[];
+    var fields = <String>[];
+    final field = StringBuffer();
+    var quoted = false;
+    // Whether anything at all has been seen in the current record. Without
+    // it a single-column record reads as a blank line and is dropped.
+    var pending = false;
 
-    switch (s[pos]) {
-      case '[':
-        return _parseJsonArray(s, pos);
-      case '{':
-        return _parseJsonObject(s, pos);
-      case '"':
-        return _parseJsonString(s, pos);
-      default:
-        return _parseJsonPrimitive(s, pos);
+    void endField() {
+      fields.add(field.toString().trim());
+      field.clear();
+      pending = true;
     }
-  }
 
-  _JsonParseResult _parseJsonArray(String s, int pos) {
-    final result = <dynamic>[];
-    pos++; // skip [
-    while (pos < s.length) {
-      while (pos < s.length && (s[pos] == ' ' || s[pos] == '\n' || s[pos] == '\r')) pos++;
-      if (pos < s.length && s[pos] == ']') return _JsonParseResult(result, pos + 1);
-      if (result.isNotEmpty) {
-        if (pos < s.length && s[pos] == ',') pos++;
+    void endRecord() {
+      if (!pending) return; // a blank line is not a record
+      endField();
+      records.add(fields);
+      fields = <String>[];
+      pending = false;
+    }
+
+    for (var i = 0; i < normalized.length; i++) {
+      final ch = normalized[i];
+      if (quoted) {
+        if (ch != '"') {
+          field.write(ch);
+        } else if (i + 1 < normalized.length && normalized[i + 1] == '"') {
+          field.write('"');
+          i++;
+        } else {
+          quoted = false;
+        }
+        continue;
       }
-      final item = _parseJsonValue(s, pos);
-      result.add(item.value);
-      pos = item.endPos;
-    }
-    return _JsonParseResult(result, pos);
-  }
-
-  _JsonParseResult _parseJsonObject(String s, int pos) {
-    final result = <String, dynamic>{};
-    pos++; // skip {
-    while (pos < s.length) {
-      while (pos < s.length && (s[pos] == ' ' || s[pos] == '\n' || s[pos] == '\r')) pos++;
-      if (pos < s.length && s[pos] == '}') return _JsonParseResult(result, pos + 1);
-      if (result.isNotEmpty) {
-        if (pos < s.length && s[pos] == ',') pos++;
-      }
-      while (pos < s.length && (s[pos] == ' ' || s[pos] == '\n' || s[pos] == '\r')) pos++;
-      final key = _parseJsonString(s, pos);
-      pos = key.endPos;
-      while (pos < s.length && (s[pos] == ' ' || s[pos] == ':')) pos++;
-      final value = _parseJsonValue(s, pos);
-      result[key.value as String] = value.value;
-      pos = value.endPos;
-    }
-    return _JsonParseResult(result, pos);
-  }
-
-  _JsonParseResult _parseJsonString(String s, int pos) {
-    pos++; // skip opening quote
-    final buf = StringBuffer();
-    while (pos < s.length && s[pos] != '"') {
-      if (s[pos] == '\\' && pos + 1 < s.length) {
-        pos++;
-        buf.write(s[pos]);
+      if (ch == '"') {
+        quoted = true;
+        pending = true;
+      } else if (ch == delimiter) {
+        endField();
+      } else if (ch == '\n') {
+        endRecord();
       } else {
-        buf.write(s[pos]);
+        field.write(ch);
+        pending = true;
       }
-      pos++;
     }
-    if (pos < s.length) pos++; // skip closing quote
-    return _JsonParseResult(buf.toString(), pos);
-  }
+    endRecord();
 
-  _JsonParseResult _parseJsonPrimitive(String s, int pos) {
-    final start = pos;
-    while (pos < s.length && s[pos] != ',' && s[pos] != ']' && s[pos] != '}' && s[pos] != ' ' && s[pos] != '\n') {
-      pos++;
-    }
-    final token = s.substring(start, pos).trim();
-    if (token == 'null') return _JsonParseResult(null, pos);
-    if (token == 'true') return _JsonParseResult(true, pos);
-    if (token == 'false') return _JsonParseResult(false, pos);
-    final intVal = int.tryParse(token);
-    if (intVal != null) return _JsonParseResult(intVal, pos);
-    final doubleVal = double.tryParse(token);
-    if (doubleVal != null) return _JsonParseResult(doubleVal, pos);
-    return _JsonParseResult(token, pos);
+    return records;
   }
 
   String _detectDelimiter(String header) {
@@ -279,11 +261,4 @@ class UploadSourceAdapter extends DataSourceAdapter {
     }
     return 'string';
   }
-}
-
-class _JsonParseResult {
-  final dynamic value;
-  final int endPos;
-
-  const _JsonParseResult(this.value, this.endPos);
 }

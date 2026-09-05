@@ -43,8 +43,8 @@ void main() {
     expect(agg.overflowDropped, 15);
     expect(agg.aggregate('v', 'min'), 15.0); // oldest evicted
     // Boundary crossing still resets.
-    agg.add(AnalysisTimePoint(
-        t: base.add(const Duration(seconds: 100)), v: 99.0));
+    agg.add(
+        AnalysisTimePoint(t: base.add(const Duration(seconds: 100)), v: 99.0));
     expect(agg.aggregate('v', 'count'), 1.0);
     expect(agg.aggregate('v', 'sum'), 99.0);
   });
@@ -68,8 +68,8 @@ void main() {
       rowCount: 300,
     );
     final r = await PcaFunction().execute({'standardize': false}, data);
-    final pc1 = ((r.results['components'] as List).first as List)
-        .cast<double>();
+    final pc1 =
+        ((r.results['components'] as List).first as List).cast<double>();
     expect(pc1[0].abs(), greaterThan(0.99),
         reason: 'raw-scale PCA must load PC1 on the high-variance column');
   });
@@ -81,8 +81,7 @@ void main() {
       return math.sin(2 * math.pi * 100 * t) +
           0.2 * math.sin(2 * math.pi * 300 * t);
     });
-    final r =
-        await HarmonicsFunction().execute({'sampleRate': fs}, _series(x));
+    final r = await HarmonicsFunction().execute({'sampleRate': fs}, _series(x));
     expect(r.results['fundamental'], closeTo(100.0, fs / 4096 + 0.1));
     expect(r.results['thd'], closeTo(0.2, 0.03));
   });

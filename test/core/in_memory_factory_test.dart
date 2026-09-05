@@ -37,7 +37,7 @@ void main() {
       'outputs': [
         {'type': 'summary', 'name': 'fft'},
       ],
-      'metadata': {'description': 'factory smoke', 'tags': []},
+      'metadata': {'description': 'factory smoke', 'tags': <dynamic>[]},
     }));
 
     final job = await port.runAnalysis(
@@ -82,16 +82,15 @@ void main() {
       'outputs': [
         {'type': 'summary', 'name': 'vibration_indicators'},
       ],
-      'metadata': {'description': 'domain smoke', 'tags': []},
+      'metadata': {'description': 'domain smoke', 'tags': <dynamic>[]},
     }));
     final job =
         await port.runAnalysis(specId: 'vib', parameters: <String, dynamic>{});
-    expect((await port.getJob(job.jobId))?.status,
-        AnalysisJobStatus.completed);
+    expect((await port.getJob(job.jobId))?.status, AnalysisJobStatus.completed);
     final artifacts = await port.getArtifacts(jobId: job.jobId);
     expect(artifacts, isNotEmpty);
-    expect(jsonEncode([for (final a in artifacts) a.toJson()]),
-        contains('rms'));
+    expect(
+        jsonEncode([for (final a in artifacts) a.toJson()]), contains('rms'));
   });
 
   test('standardBuiltinFunctions matches the documented catalog size', () {

@@ -11,13 +11,12 @@ import '../../helpers/test_data.dart';
 
 /// A fake data source adapter that returns configurable test data.
 class FakeDataSourceAdapter implements DataSourceAdapter {
-  final AnalysisDataSet? dataToReturn;
-  final bool shouldThrow;
-
   FakeDataSourceAdapter({
     this.dataToReturn,
     this.shouldThrow = false,
   });
+  final AnalysisDataSet? dataToReturn;
+  final bool shouldThrow;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;
@@ -39,9 +38,9 @@ class FakeDataSourceAdapter implements DataSourceAdapter {
 
   @override
   Future<AnalysisSourceSchema> getSourceMetadata(String query) async {
-    return AnalysisSourceSchema(
+    return const AnalysisSourceSchema(
       columns: [
-        const AnalysisColumnInfo(name: 'temperature', type: 'double'),
+        AnalysisColumnInfo(name: 'temperature', type: 'double'),
       ],
     );
   }
@@ -55,13 +54,6 @@ class FakeDataSourceAdapter implements DataSourceAdapter {
 // ============================================================================
 
 class _TestFixture {
-  final InMemoryStorage<AnalysisJob> jobStorage;
-  final InMemoryStorage<AnalysisArtifact> artifactStorage;
-  final JobManager jobManager;
-  final ArtifactStore artifactStore;
-  final DataSourceRegistry dataSourceRegistry;
-  final AdhocExecutor executor;
-
   _TestFixture._({
     required this.jobStorage,
     required this.artifactStorage,
@@ -125,6 +117,12 @@ class _TestFixture {
       executor: executor,
     );
   }
+  final InMemoryStorage<AnalysisJob> jobStorage;
+  final InMemoryStorage<AnalysisArtifact> artifactStorage;
+  final JobManager jobManager;
+  final ArtifactStore artifactStore;
+  final DataSourceRegistry dataSourceRegistry;
+  final AdhocExecutor executor;
 }
 
 // ============================================================================
@@ -296,11 +294,14 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [
           AnalysisOutputDef(
+            from: 'descriptive_stats',
             type: AnalysisArtifactType.metric,
             name: 'merged_stats',
           ),
@@ -351,11 +352,14 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [
           AnalysisOutputDef(
+            from: 'descriptive_stats',
             type: AnalysisArtifactType.metric,
             name: 'stats',
           ),
@@ -397,7 +401,11 @@ void main() {
         transforms: [
           AnalysisTransform(
             name: 'fillna',
-            parameters: {'column': 'temperature', 'method': 'value', 'value': 0.0},
+            parameters: {
+              'column': 'temperature',
+              'method': 'value',
+              'value': 0.0
+            },
           ),
           AnalysisTransform(
             name: 'clip',
@@ -411,7 +419,9 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [
@@ -457,11 +467,15 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [
@@ -539,7 +553,9 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [
@@ -652,7 +668,9 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [

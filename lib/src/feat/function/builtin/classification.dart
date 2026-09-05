@@ -12,8 +12,7 @@ class RuleBasedClassificationFunction implements AnalysisFunction {
           'rules': AnalysisParameterSchema(
             name: 'rules',
             type: 'array',
-            description:
-                'List of rules: [{column, operator, value, label}]',
+            description: 'List of rules: [{column, operator, value, label}]',
           ),
           'defaultLabel': AnalysisParameterSchema(
             name: 'defaultLabel',
@@ -28,6 +27,29 @@ class RuleBasedClassificationFunction implements AnalysisFunction {
             description: 'Name of the output label column',
           ),
         },
+        results: const {
+          'labeledRows': AnalysisResultSchema(
+            name: 'labeledRows',
+            type: 'array',
+            itemType: 'object',
+            description: 'Input rows with the label column added',
+          ),
+          'distribution': AnalysisResultSchema(
+            name: 'distribution',
+            type: 'object',
+            description: 'Row count per label',
+          ),
+          'outputColumn': AnalysisResultSchema(
+            name: 'outputColumn',
+            type: 'string',
+            description: 'Name of the label column',
+          ),
+          'totalRows': AnalysisResultSchema(
+            name: 'totalRows',
+            type: 'number',
+            description: 'Rows classified',
+          ),
+        },
         supportedDataTypes: ['double', 'int', 'string'],
       );
 
@@ -37,8 +59,10 @@ class RuleBasedClassificationFunction implements AnalysisFunction {
     AnalysisDataSet data,
   ) async {
     final sw = Stopwatch()..start();
-    final rules = (parameters['rules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final defaultLabel = parameters['defaultLabel'] as String? ?? 'unclassified';
+    final rules =
+        (parameters['rules'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final defaultLabel =
+        parameters['defaultLabel'] as String? ?? 'unclassified';
     final outputColumn = parameters['outputColumn'] as String? ?? '_label';
 
     final labeledRows = <Map<String, dynamic>>[];

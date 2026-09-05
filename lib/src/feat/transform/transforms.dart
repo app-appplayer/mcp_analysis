@@ -51,8 +51,7 @@ class FilterTransform extends TransformHandler {
       if (!columnNames.contains(column)) {
         throw AnalysisError(
           code: 'transform.schema_error',
-          message:
-              'Filter transform references non-existent column "$column"',
+          message: 'Filter transform references non-existent column "$column"',
           step: 'transform:filter',
           details: {
             'transform': 'filter',
@@ -165,8 +164,7 @@ class SortTransform extends TransformHandler {
       if (!columnNames.contains(col)) {
         throw AnalysisError(
           code: 'transform.schema_error',
-          message:
-              'Sort transform references non-existent column "$col"',
+          message: 'Sort transform references non-existent column "$col"',
           step: 'transform:sort',
           details: {
             'transform': 'sort',
@@ -264,8 +262,7 @@ class FillnaTransform extends TransformHandler {
       if (!columnNames.contains(column)) {
         throw AnalysisError(
           code: 'transform.schema_error',
-          message:
-              'Fillna transform references non-existent column "$column"',
+          message: 'Fillna transform references non-existent column "$column"',
           step: 'transform:fillna',
           details: {
             'transform': 'fillna',
@@ -334,8 +331,7 @@ class ClipTransform extends TransformHandler {
       if (!columnNames.contains(column)) {
         throw AnalysisError(
           code: 'transform.schema_error',
-          message:
-              'Clip transform references non-existent column "$column"',
+          message: 'Clip transform references non-existent column "$column"',
           step: 'transform:clip',
           details: {
             'transform': 'clip',
@@ -350,8 +346,7 @@ class ClipTransform extends TransformHandler {
       if (!numericTypes.contains(colInfo.type)) {
         throw AnalysisError(
           code: 'transform.schema_error',
-          message:
-              'Clip transform requires numeric column, '
+          message: 'Clip transform requires numeric column, '
               'but "$column" has type "${colInfo.type}"',
           step: 'transform:clip',
           details: {
@@ -426,11 +421,8 @@ class ResampleTransform extends TransformHandler {
       // Aggregate numeric columns
       for (final col in input.columns) {
         if (col.name == tsCol) continue;
-        final values = rows
-            .map((r) => r[col.name])
-            .where((v) => v is num)
-            .cast<num>()
-            .toList();
+        final values =
+            rows.map((r) => r[col.name]).whereType<num>().cast<num>().toList();
 
         if (values.isEmpty) {
           newRow[col.name] = null;
@@ -475,8 +467,7 @@ class ResampleTransform extends TransformHandler {
       final columnNames = inputSchema.map((c) => c.name).toList();
       throw AnalysisError(
         code: 'transform.schema_error',
-        message:
-            'Resample transform requires a timestamp column '
+        message: 'Resample transform requires a timestamp column '
             '(type "datetime" or name containing "timestamp")',
         step: 'transform:resample',
         details: {
@@ -728,8 +719,7 @@ class UnitConvertTransform extends TransformHandler {
     if (column == null || from == null || to == null) {
       throw AnalysisError(
         code: 'transform.parameter_error',
-        message:
-            'unit_convert requires "column", "from", and "to" parameters',
+        message: 'unit_convert requires "column", "from", and "to" parameters',
         step: 'transform:unit_convert',
       );
     }
@@ -787,8 +777,7 @@ class UnitConvertTransform extends TransformHandler {
       if (!columnNames.contains(column)) {
         throw AnalysisError(
           code: 'transform.schema_error',
-          message:
-              'unit_convert transform references non-existent '
+          message: 'unit_convert transform references non-existent '
               'column "$column"',
           step: 'transform:unit_convert',
           details: {
@@ -805,8 +794,7 @@ class UnitConvertTransform extends TransformHandler {
       if (!numericTypes.contains(colInfo.type)) {
         throw AnalysisError(
           code: 'transform.schema_error',
-          message:
-              'unit_convert transform requires numeric column, '
+          message: 'unit_convert transform requires numeric column, '
               'but "$column" has type "${colInfo.type}"',
           step: 'transform:unit_convert',
           details: {
@@ -823,8 +811,7 @@ class UnitConvertTransform extends TransformHandler {
         if (!_conversionFactors.containsKey(key)) {
           throw AnalysisError(
             code: 'transform.schema_error',
-            message:
-                'unit_convert: unsupported conversion "$from" to "$to"',
+            message: 'unit_convert: unsupported conversion "$from" to "$to"',
             step: 'transform:unit_convert',
             details: {
               'transform': 'unit_convert',

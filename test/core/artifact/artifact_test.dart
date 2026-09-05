@@ -37,7 +37,9 @@ void main() {
     });
 
     // TC-001: Build Metric artifact and verify fields (with jobId and tags)
-    test('TC-001: buildMetric returns AnalysisMetricArtifact with correct fields', () {
+    test(
+        'TC-001: buildMetric returns AnalysisMetricArtifact with correct fields',
+        () {
       final artifact = builder.buildMetric(
         jobId: 'job-001',
         name: 'avg_temperature',
@@ -61,7 +63,9 @@ void main() {
     });
 
     // TC-002: Build Series artifact and verify fields
-    test('TC-002: buildSeries returns AnalysisSeriesArtifact with correct fields', () {
+    test(
+        'TC-002: buildSeries returns AnalysisSeriesArtifact with correct fields',
+        () {
       final points = [
         AnalysisTimePoint(t: DateTime(2025, 1, 1), v: 70.0),
         AnalysisTimePoint(t: DateTime(2025, 1, 2), v: 72.5),
@@ -87,7 +91,8 @@ void main() {
     });
 
     // TC-003: Build Table artifact and verify fields
-    test('TC-003: buildTable returns AnalysisTableArtifact with correct fields', () {
+    test('TC-003: buildTable returns AnalysisTableArtifact with correct fields',
+        () {
       final columns = ['name', 'value', 'status'];
       final rows = [
         {'name': 'temp', 'value': 72.5, 'status': 'normal'},
@@ -112,7 +117,8 @@ void main() {
     });
 
     // TC-004: Build Chart artifact and verify fields
-    test('TC-004: buildChart returns AnalysisChartArtifact with correct fields', () {
+    test('TC-004: buildChart returns AnalysisChartArtifact with correct fields',
+        () {
       final seriesArtifact = AnalysisSeriesArtifact(
         artifactId: 'series-001',
         name: 'temp_series',
@@ -143,7 +149,9 @@ void main() {
     });
 
     // TC-005: Build Summary artifact and verify fields
-    test('TC-005: buildSummary returns AnalysisSummaryArtifact with correct fields', () {
+    test(
+        'TC-005: buildSummary returns AnalysisSummaryArtifact with correct fields',
+        () {
       final evidenceLinks = [
         const AnalysisEvidenceLink(uri: 'factgraph://temp', query: 'temp > 80'),
       ];
@@ -165,7 +173,9 @@ void main() {
     });
 
     // TC-006: Build AlertRule artifact and verify fields
-    test('TC-006: buildAlertRule returns AnalysisAlertRuleArtifact with correct fields', () {
+    test(
+        'TC-006: buildAlertRule returns AnalysisAlertRuleArtifact with correct fields',
+        () {
       final artifact = builder.buildAlertRule(
         jobId: 'job-001',
         name: 'high_temp_alert',
@@ -182,7 +192,8 @@ void main() {
     });
 
     // TC-007: Build Model artifact and verify fields
-    test('TC-007: buildModel returns AnalysisModelArtifact with correct fields', () {
+    test('TC-007: buildModel returns AnalysisModelArtifact with correct fields',
+        () {
       final params = {'learningRate': 0.01, 'epochs': 100};
       final perfMetrics = {'accuracy': 0.95, 'rmse': 0.12};
 
@@ -206,11 +217,14 @@ void main() {
     });
 
     // TC-008: buildFromOutputDefs maps 3 output definitions to artifacts
-    test('TC-008: buildFromOutputDefs maps 3 output defs to correct artifact types', () {
+    test(
+        'TC-008: buildFromOutputDefs maps 3 output defs to correct artifact types',
+        () {
       final outputDefs = [
         AnalysisOutputDef(type: AnalysisArtifactType.metric, name: 'avg_temp'),
         AnalysisOutputDef(type: AnalysisArtifactType.summary, name: 'report'),
-        AnalysisOutputDef(type: AnalysisArtifactType.alert, name: 'threshold_alert'),
+        AnalysisOutputDef(
+            type: AnalysisArtifactType.alert, name: 'threshold_alert'),
       ];
 
       final functionResults = <String, dynamic>{
@@ -243,9 +257,12 @@ void main() {
     });
 
     // TC-009: buildFromOutputDefs handles missing function result gracefully
-    test('TC-009: buildFromOutputDefs handles missing function result with defaults', () {
+    test(
+        'TC-009: buildFromOutputDefs handles missing function result with defaults',
+        () {
       final outputDefs = [
-        AnalysisOutputDef(type: AnalysisArtifactType.metric, name: 'missing_metric'),
+        AnalysisOutputDef(
+            type: AnalysisArtifactType.metric, name: 'missing_metric'),
       ];
 
       // No matching key in functionResults
@@ -284,7 +301,8 @@ void main() {
     });
 
     // TC-COV-001: buildFromOutputDefs builds series artifact from map data
-    test('TC-COV-001: buildFromOutputDefs builds series artifact from map data', () {
+    test('TC-COV-001: buildFromOutputDefs builds series artifact from map data',
+        () {
       final outputDefs = [
         AnalysisOutputDef(type: AnalysisArtifactType.series, name: 'trend'),
       ];
@@ -314,7 +332,8 @@ void main() {
     });
 
     // TC-COV-002: buildFromOutputDefs builds series with non-map result
-    test('TC-COV-002: buildFromOutputDefs builds series with non-map result', () {
+    test('TC-COV-002: buildFromOutputDefs builds series with non-map result',
+        () {
       final outputDefs = [
         AnalysisOutputDef(type: AnalysisArtifactType.series, name: 'trend'),
       ];
@@ -366,7 +385,8 @@ void main() {
     });
 
     // TC-COV-004: buildFromOutputDefs builds table with non-map result
-    test('TC-COV-004: buildFromOutputDefs builds table with non-map result', () {
+    test('TC-COV-004: buildFromOutputDefs builds table with non-map result',
+        () {
       final outputDefs = [
         AnalysisOutputDef(type: AnalysisArtifactType.table, name: 'data_table'),
       ];
@@ -419,7 +439,9 @@ void main() {
     // TC-COV-006: buildFromOutputDefs builds model with non-map result
     // With validation, non-map result produces empty parameters/metrics
     // which triggers artifact.build_error
-    test('TC-COV-006: buildFromOutputDefs builds model with non-map result throws', () {
+    test(
+        'TC-COV-006: buildFromOutputDefs builds model with non-map result throws',
+        () {
       final outputDefs = [
         AnalysisOutputDef(type: AnalysisArtifactType.model, name: 'predictor'),
       ];
@@ -464,12 +486,15 @@ void main() {
       expect(artifacts[0], isA<AnalysisChartArtifact>());
       final chart = artifacts[0] as AnalysisChartArtifact;
       expect(chart.series, isEmpty);
-      expect(chart.xAxis.label, equals('x'));
-      expect(chart.yAxis.label, equals('y'));
+      // With no `field` named, the axes say what they are indexed by
+      // rather than carrying placeholder letters.
+      expect(chart.xAxis.label, equals('index'));
+      expect(chart.yAxis.label, equals('value'));
     });
 
     // TC-COV-008: buildFromOutputDefs with summary non-map result uses toString
-    test('TC-COV-008: buildFromOutputDefs summary with non-map uses toString', () {
+    test('TC-COV-008: buildFromOutputDefs summary with non-map uses toString',
+        () {
       final outputDefs = [
         AnalysisOutputDef(type: AnalysisArtifactType.summary, name: 'report'),
       ];
@@ -491,7 +516,8 @@ void main() {
     });
 
     // TC-COV-009: buildFromOutputDefs with alert non-map result defaults
-    test('TC-COV-009: buildFromOutputDefs alert with non-map result defaults', () {
+    test('TC-COV-009: buildFromOutputDefs alert with non-map result defaults',
+        () {
       final outputDefs = [
         AnalysisOutputDef(type: AnalysisArtifactType.alert, name: 'alert1'),
       ];
@@ -513,7 +539,9 @@ void main() {
     });
 
     // TC-COV-010: buildFromOutputDefs with provenance without inputRange
-    test('TC-COV-010: buildFromOutputDefs metric uses fallback timeRange when inputRange is null', () {
+    test(
+        'TC-COV-010: buildFromOutputDefs metric uses fallback timeRange when inputRange is null',
+        () {
       final noRangeProv = AnalysisArtifactProvenance(
         version: '1.0.0',
         tags: ['test'],
@@ -654,7 +682,9 @@ void main() {
     });
 
     // TC-017: query by jobId returns matching artifacts
-    test('TC-017: query returns all artifacts (InMemoryStorage returns all on query)', () async {
+    test(
+        'TC-017: query returns all artifacts (InMemoryStorage returns all on query)',
+        () async {
       final artifact = builder.buildMetric(
         jobId: 'job-001',
         name: 'query_test',
@@ -691,12 +721,14 @@ void main() {
       await store.save(metric);
       await store.save(summary);
 
-      final metricResults = await store.query(type: AnalysisArtifactType.metric);
+      final metricResults =
+          await store.query(type: AnalysisArtifactType.metric);
       expect(metricResults, hasLength(1));
       expect(metricResults[0], isA<AnalysisMetricArtifact>());
       expect(metricResults[0].name, equals('metric_for_type_query'));
 
-      final summaryResults = await store.query(type: AnalysisArtifactType.summary);
+      final summaryResults =
+          await store.query(type: AnalysisArtifactType.summary);
       expect(summaryResults, hasLength(1));
       expect(summaryResults[0], isA<AnalysisSummaryArtifact>());
     });
@@ -1016,7 +1048,8 @@ void main() {
     });
 
     // IT-001: Build -> Save -> Query round-trip
-    test('IT-001: build, save, and query round-trip preserves artifact data', () async {
+    test('IT-001: build, save, and query round-trip preserves artifact data',
+        () async {
       final artifact = builder.buildMetric(
         jobId: 'job-int-001',
         name: 'round_trip_metric',
@@ -1044,7 +1077,8 @@ void main() {
     });
 
     // IT-002: saveAll then query by type
-    test('IT-002: saveAll mixed artifacts then query filters by type', () async {
+    test('IT-002: saveAll mixed artifacts then query filters by type',
+        () async {
       final metric = builder.buildMetric(
         jobId: 'job-int-002',
         name: 'int_metric',
@@ -1071,12 +1105,14 @@ void main() {
       expect(storage.length, equals(3));
 
       // Query by metric type
-      final metricResults = await store.query(type: AnalysisArtifactType.metric);
+      final metricResults =
+          await store.query(type: AnalysisArtifactType.metric);
       expect(metricResults, hasLength(1));
       expect(metricResults[0].name, equals('int_metric'));
 
       // Query by summary type
-      final summaryResults = await store.query(type: AnalysisArtifactType.summary);
+      final summaryResults =
+          await store.query(type: AnalysisArtifactType.summary);
       expect(summaryResults, hasLength(1));
       expect(summaryResults[0].name, equals('int_summary'));
 
@@ -1087,7 +1123,9 @@ void main() {
     });
 
     // IT-003: Provenance preserved through save/query cycle
-    test('IT-003: provenance created by tracker is preserved through save and query', () async {
+    test(
+        'IT-003: provenance created by tracker is preserved through save and query',
+        () async {
       final provenance = tracker.createProvenance(
         specId: 'integration-spec',
         specVersion: '2.5.0',
@@ -1187,11 +1225,13 @@ void main() {
     });
 
     // Build from model output
-    test('TC-032: buildFromOutputDefs maps model with parameters and metrics', () {
+    test('TC-032: buildFromOutputDefs maps model with parameters and metrics',
+        () {
       final artifacts = builder.buildFromOutputDefs(
         jobId: 'job-model',
         outputDefs: [
-          AnalysisOutputDef(type: AnalysisArtifactType.model, name: 'predictor'),
+          AnalysisOutputDef(
+              type: AnalysisArtifactType.model, name: 'predictor'),
         ],
         functionResults: {
           'predictor': {
@@ -1218,7 +1258,7 @@ void main() {
           AnalysisOutputDef(type: AnalysisArtifactType.chart, name: 'chart'),
         ],
         functionResults: {
-          'chart': {},
+          'chart': <String, dynamic>{},
         },
         provenance: testProvenance,
       );
@@ -1226,8 +1266,10 @@ void main() {
       expect(artifacts, hasLength(1));
       expect(artifacts[0], isA<AnalysisChartArtifact>());
       final chart = artifacts[0] as AnalysisChartArtifact;
-      expect(chart.xAxis.label, equals('x'));
-      expect(chart.yAxis.label, equals('y'));
+      // With no `field` named, the axes say what they are indexed by
+      // rather than carrying placeholder letters.
+      expect(chart.xAxis.label, equals('index'));
+      expect(chart.yAxis.label, equals('value'));
     });
 
     // Build with null function result for each type
@@ -1235,7 +1277,8 @@ void main() {
       final artifacts = builder.buildFromOutputDefs(
         jobId: 'job-null-summary',
         outputDefs: [
-          AnalysisOutputDef(type: AnalysisArtifactType.summary, name: 'missing'),
+          AnalysisOutputDef(
+              type: AnalysisArtifactType.summary, name: 'missing'),
         ],
         functionResults: {},
         provenance: testProvenance,
@@ -1263,12 +1306,14 @@ void main() {
 
     // With validation, null result for model produces empty parameters/metrics
     // which triggers artifact.build_error
-    test('TC-036: buildFromOutputDefs handles null result for model throws', () {
+    test('TC-036: buildFromOutputDefs handles null result for model throws',
+        () {
       expect(
         () => builder.buildFromOutputDefs(
           jobId: 'job-null-model',
           outputDefs: [
-            AnalysisOutputDef(type: AnalysisArtifactType.model, name: 'missing'),
+            AnalysisOutputDef(
+                type: AnalysisArtifactType.model, name: 'missing'),
           ],
           functionResults: {},
           provenance: testProvenance,
@@ -1337,7 +1382,8 @@ void main() {
           AnalysisOutputDef(type: AnalysisArtifactType.metric, name: 'metric'),
           AnalysisOutputDef(type: AnalysisArtifactType.series, name: 'series'),
           AnalysisOutputDef(type: AnalysisArtifactType.table, name: 'table'),
-          AnalysisOutputDef(type: AnalysisArtifactType.summary, name: 'summary'),
+          AnalysisOutputDef(
+              type: AnalysisArtifactType.summary, name: 'summary'),
           AnalysisOutputDef(type: AnalysisArtifactType.alert, name: 'alert'),
           AnalysisOutputDef(type: AnalysisArtifactType.model, name: 'model'),
           AnalysisOutputDef(type: AnalysisArtifactType.chart, name: 'chart'),
@@ -1414,37 +1460,71 @@ void main() {
 
     test('unique artifactId from different builder methods', () {
       final ids = <String>{};
-      ids.add(builder.buildMetric(
-        jobId: 'j', name: 'a', value: 1, unit: 'u',
-        timeRange: testTimeRange, provenance: testProvenance,
-      ).artifactId);
-      ids.add(builder.buildSeries(
-        jobId: 'j', name: 'b', points: [], unit: 'u',
-        provenance: testProvenance,
-      ).artifactId);
-      ids.add(builder.buildTable(
-        jobId: 'j', name: 'c', columns: [], rows: [],
-        provenance: testProvenance,
-      ).artifactId);
-      ids.add(builder.buildSummary(
-        jobId: 'j', name: 'd', text: 't',
-        provenance: testProvenance,
-      ).artifactId);
-      ids.add(builder.buildAlertRule(
-        jobId: 'j', name: 'e', condition: 'x > 1',
-        severity: AnalysisAlertSeverity.info, provenance: testProvenance,
-      ).artifactId);
-      ids.add(builder.buildModel(
-        jobId: 'j', name: 'f',
-        modelParameters: {'lr': 0.01}, modelVersion: '1.0.0',
-        performanceMetrics: {'acc': 0.9}, provenance: testProvenance,
-      ).artifactId);
-      ids.add(builder.buildChart(
-        jobId: 'j', name: 'g', series: [],
-        xAxis: AnalysisAxisMeta(label: 'x', type: 'linear'),
-        yAxis: AnalysisAxisMeta(label: 'y', type: 'linear'),
-        provenance: testProvenance,
-      ).artifactId);
+      ids.add(builder
+          .buildMetric(
+            jobId: 'j',
+            name: 'a',
+            value: 1,
+            unit: 'u',
+            timeRange: testTimeRange,
+            provenance: testProvenance,
+          )
+          .artifactId);
+      ids.add(builder
+          .buildSeries(
+            jobId: 'j',
+            name: 'b',
+            points: [],
+            unit: 'u',
+            provenance: testProvenance,
+          )
+          .artifactId);
+      ids.add(builder
+          .buildTable(
+            jobId: 'j',
+            name: 'c',
+            columns: [],
+            rows: [],
+            provenance: testProvenance,
+          )
+          .artifactId);
+      ids.add(builder
+          .buildSummary(
+            jobId: 'j',
+            name: 'd',
+            text: 't',
+            provenance: testProvenance,
+          )
+          .artifactId);
+      ids.add(builder
+          .buildAlertRule(
+            jobId: 'j',
+            name: 'e',
+            condition: 'x > 1',
+            severity: AnalysisAlertSeverity.info,
+            provenance: testProvenance,
+          )
+          .artifactId);
+      ids.add(builder
+          .buildModel(
+            jobId: 'j',
+            name: 'f',
+            modelParameters: {'lr': 0.01},
+            modelVersion: '1.0.0',
+            performanceMetrics: {'acc': 0.9},
+            provenance: testProvenance,
+          )
+          .artifactId);
+      ids.add(builder
+          .buildChart(
+            jobId: 'j',
+            name: 'g',
+            series: [],
+            xAxis: AnalysisAxisMeta(label: 'x', type: 'linear'),
+            yAxis: AnalysisAxisMeta(label: 'y', type: 'linear'),
+            provenance: testProvenance,
+          )
+          .artifactId);
 
       // All 7 IDs must be distinct
       expect(ids, hasLength(7));
@@ -1536,8 +1616,10 @@ void main() {
       final chart = artifacts[0] as AnalysisChartArtifact;
       expect(chart.name, equals('my_chart'));
       expect(chart.series, isEmpty);
-      expect(chart.xAxis.label, equals('x'));
-      expect(chart.yAxis.label, equals('y'));
+      // With no `field` named, the axes say what they are indexed by
+      // rather than carrying placeholder letters.
+      expect(chart.xAxis.label, equals('index'));
+      expect(chart.yAxis.label, equals('value'));
     });
 
     // TC-030: buildFromOutputDefs builds model artifact
@@ -1704,7 +1786,8 @@ void main() {
     });
 
     // TC-037: buildFromOutputDefs table with Map result where rows key is null
-    test('TC-037: buildFromOutputDefs table with null rows in Map hits default', () {
+    test('TC-037: buildFromOutputDefs table with null rows in Map hits default',
+        () {
       final artifacts = builder.buildFromOutputDefs(
         jobId: 'job-null-rows',
         outputDefs: [
@@ -1727,7 +1810,8 @@ void main() {
     });
 
     // TC-038: buildFromOutputDefs wraps non-AnalysisError as artifact.build_error
-    test('TC-038: buildFromOutputDefs wraps TypeError as artifact.build_error', () {
+    test('TC-038: buildFromOutputDefs wraps TypeError as artifact.build_error',
+        () {
       // Provide 'parameters' as a non-null, non-Map value to trigger TypeError
       // on `resultData['parameters'] as Map?`
       expect(
@@ -1790,15 +1874,17 @@ void main() {
           provenance: provenance,
         ),
         throwsA(
-          isA<AnalysisError>().having(
-            (e) => e.code,
-            'code',
-            'artifact.build_error',
-          ).having(
-            (e) => e.message,
-            'message',
-            contains('Failed to build artifact'),
-          ),
+          isA<AnalysisError>()
+              .having(
+                (e) => e.code,
+                'code',
+                'artifact.build_error',
+              )
+              .having(
+                (e) => e.message,
+                'message',
+                contains('Failed to build artifact'),
+              ),
         ),
       );
     });
@@ -1829,7 +1915,9 @@ void main() {
     });
 
     // TC-041: buildModel with empty modelParameters throws artifact.build_error
-    test('TC-041: buildModel with empty modelParameters throws artifact.build_error', () {
+    test(
+        'TC-041: buildModel with empty modelParameters throws artifact.build_error',
+        () {
       expect(
         () => builder.buildModel(
           jobId: 'job-val',
@@ -1852,7 +1940,9 @@ void main() {
     });
 
     // TC-042: buildModel with empty modelVersion throws artifact.build_error
-    test('TC-042: buildModel with empty modelVersion throws artifact.build_error', () {
+    test(
+        'TC-042: buildModel with empty modelVersion throws artifact.build_error',
+        () {
       expect(
         () => builder.buildModel(
           jobId: 'job-val',
@@ -1875,7 +1965,9 @@ void main() {
     });
 
     // TC-043: buildModel with empty performanceMetrics throws artifact.build_error
-    test('TC-043: buildModel with empty performanceMetrics throws artifact.build_error', () {
+    test(
+        'TC-043: buildModel with empty performanceMetrics throws artifact.build_error',
+        () {
       expect(
         () => builder.buildModel(
           jobId: 'job-val',

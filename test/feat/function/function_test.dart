@@ -11,7 +11,7 @@ void main() {
 
   // Numeric data for descriptive stats and anomaly detection
   final numericData = AnalysisDataSet(
-    columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+    columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
     rows: [
       {'value': 10.0},
       {'value': 20.0},
@@ -26,8 +26,8 @@ void main() {
   // Event data for event analysis
   final eventData = AnalysisDataSet(
     columns: [
-      AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
-      AnalysisColumnInfo(name: 'eventType', type: 'string'),
+      const AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
+      const AnalysisColumnInfo(name: 'eventType', type: 'string'),
     ],
     rows: [
       {'_timestamp': DateTime(2024, 1, 1, 0, 0), 'eventType': 'error'},
@@ -41,8 +41,8 @@ void main() {
   // Two-variable data for correlation / regression
   final twoVarData = AnalysisDataSet(
     columns: [
-      AnalysisColumnInfo(name: 'x', type: 'double'),
-      AnalysisColumnInfo(name: 'y', type: 'double'),
+      const AnalysisColumnInfo(name: 'x', type: 'double'),
+      const AnalysisColumnInfo(name: 'y', type: 'double'),
     ],
     rows: [
       {'x': 1.0, 'y': 2.0},
@@ -294,28 +294,36 @@ void main() {
 
     // TC-001: min value
     test('TC-001: computes min = 10.0', () async {
-      final result = await fn.execute({'columns': ['value']}, numericData);
+      final result = await fn.execute({
+        'columns': ['value']
+      }, numericData);
       final stats = result.results['value'] as Map<String, dynamic>;
       expect(stats['min'], equals(10.0));
     });
 
     // TC-002: max value
     test('TC-002: computes max = 100.0', () async {
-      final result = await fn.execute({'columns': ['value']}, numericData);
+      final result = await fn.execute({
+        'columns': ['value']
+      }, numericData);
       final stats = result.results['value'] as Map<String, dynamic>;
       expect(stats['max'], equals(100.0));
     });
 
     // TC-003: average value (250/6 ~ 41.67)
     test('TC-003: computes avg close to 41.67', () async {
-      final result = await fn.execute({'columns': ['value']}, numericData);
+      final result = await fn.execute({
+        'columns': ['value']
+      }, numericData);
       final stats = result.results['value'] as Map<String, dynamic>;
       expect((stats['avg'] as double), closeTo(41.67, 0.01));
     });
 
     // TC-004: standard deviation is computed and positive
     test('TC-004: computes std > 0', () async {
-      final result = await fn.execute({'columns': ['value']}, numericData);
+      final result = await fn.execute({
+        'columns': ['value']
+      }, numericData);
       final stats = result.results['value'] as Map<String, dynamic>;
       final std = stats['std'] as double;
       expect(std, greaterThan(0));
@@ -324,7 +332,10 @@ void main() {
     // TC-005: percentiles are computed
     test('TC-005: computes percentiles p25, p50, p75', () async {
       final result = await fn.execute(
-        {'columns': ['value'], 'percentiles': [25, 50, 75]},
+        {
+          'columns': ['value'],
+          'percentiles': [25, 50, 75]
+        },
         numericData,
       );
       final stats = result.results['value'] as Map<String, dynamic>;
@@ -336,11 +347,13 @@ void main() {
     // TC-006: empty data returns count 0
     test('TC-006: empty data returns count 0 with zero stats', () async {
       final emptyData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [],
         rowCount: 0,
       );
-      final result = await fn.execute({'columns': ['value']}, emptyData);
+      final result = await fn.execute({
+        'columns': ['value']
+      }, emptyData);
       final stats = result.results['value'] as Map<String, dynamic>;
       expect(stats['count'], equals(0));
       expect(stats['min'], equals(0.0));
@@ -361,13 +374,15 @@ void main() {
     // Single-value dataset: std should be 0
     test('single value dataset produces std of 0', () async {
       final singleData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 42.0},
         ],
         rowCount: 1,
       );
-      final result = await fn.execute({'columns': ['value']}, singleData);
+      final result = await fn.execute({
+        'columns': ['value']
+      }, singleData);
       final stats = result.results['value'] as Map<String, dynamic>;
       expect(stats['count'], equals(1));
       expect(stats['std'], equals(0.0));
@@ -380,9 +395,9 @@ void main() {
     test('default columns auto-selects all numeric columns', () async {
       final multiColData = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: 'x', type: 'double'),
-          AnalysisColumnInfo(name: 'label', type: 'string'),
-          AnalysisColumnInfo(name: 'y', type: 'int'),
+          const AnalysisColumnInfo(name: 'x', type: 'double'),
+          const AnalysisColumnInfo(name: 'label', type: 'string'),
+          const AnalysisColumnInfo(name: 'y', type: 'int'),
         ],
         rows: [
           {'x': 1.0, 'label': 'a', 'y': 10},
@@ -401,7 +416,10 @@ void main() {
     // Custom percentiles parameter
     test('custom percentiles computes requested percentile values', () async {
       final result = await fn.execute(
-        {'columns': ['value'], 'percentiles': [10, 90]},
+        {
+          'columns': ['value'],
+          'percentiles': [10, 90]
+        },
         numericData,
       );
       final stats = result.results['value'] as Map<String, dynamic>;
@@ -415,14 +433,16 @@ void main() {
     // Column with all null values produces count 0
     test('column with all null values produces count 0', () async {
       final nullData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': null},
           {'value': null},
         ],
         rowCount: 2,
       );
-      final result = await fn.execute({'columns': ['value']}, nullData);
+      final result = await fn.execute({
+        'columns': ['value']
+      }, nullData);
       final stats = result.results['value'] as Map<String, dynamic>;
       expect(stats['count'], equals(0));
     });
@@ -590,13 +610,11 @@ void main() {
         },
         eventData,
       );
-      final transitions =
-          result.results['transitions'] as Map<String, dynamic>;
+      final transitions = result.results['transitions'] as Map<String, dynamic>;
       // error -> recovery (2 times), recovery -> error (1 time)
       expect(transitions.containsKey('error'), isTrue);
       expect(transitions.containsKey('recovery'), isTrue);
-      final errorTransitions =
-          transitions['error'] as Map<String, dynamic>;
+      final errorTransitions = transitions['error'] as Map<String, dynamic>;
       expect(errorTransitions['recovery'], equals(2));
       final recoveryTransitions =
           transitions['recovery'] as Map<String, dynamic>;
@@ -617,7 +635,7 @@ void main() {
     // TC-015: moving average with window=3 on [10,20,30,40,50]
     test('TC-015: moving average window=3', () async {
       final tsData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 10.0},
           {'value': 20.0},
@@ -648,7 +666,7 @@ void main() {
     test('TC-019-spec: fewer points than windowSize handles gracefully',
         () async {
       final smallData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 10.0},
           {'value': 20.0},
@@ -674,7 +692,7 @@ void main() {
     // TC-016: trend computes slope and intercept
     test('TC-016: trend computes slope and intercept', () async {
       final tsData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 10.0},
           {'value': 20.0},
@@ -742,8 +760,8 @@ void main() {
     test('TC-023-spec: insufficient data throws or indicates error', () async {
       final singleRowData = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: 'x', type: 'double'),
-          AnalysisColumnInfo(name: 'y', type: 'double'),
+          const AnalysisColumnInfo(name: 'x', type: 'double'),
+          const AnalysisColumnInfo(name: 'y', type: 'double'),
         ],
         rows: [
           {'x': 1.0, 'y': 2.0},
@@ -771,8 +789,8 @@ void main() {
     test('TC-019: constant y produces correlation close to 0', () async {
       final constantYData = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: 'x', type: 'double'),
-          AnalysisColumnInfo(name: 'y', type: 'double'),
+          const AnalysisColumnInfo(name: 'x', type: 'double'),
+          const AnalysisColumnInfo(name: 'y', type: 'double'),
         ],
         rows: [
           {'x': 1.0, 'y': 5.0},
@@ -800,7 +818,7 @@ void main() {
     late RuleBasedClassificationFunction fn;
 
     final classificationData = AnalysisDataSet(
-      columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+      columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
       rows: [
         {'value': 10.0},
         {'value': 50.0},
@@ -942,8 +960,8 @@ void main() {
 
     final classificationData = AnalysisDataSet(
       columns: [
-        AnalysisColumnInfo(name: 'value', type: 'double'),
-        AnalysisColumnInfo(name: 'name', type: 'string'),
+        const AnalysisColumnInfo(name: 'value', type: 'double'),
+        const AnalysisColumnInfo(name: 'name', type: 'string'),
       ],
       rows: [
         {'value': 10.0, 'name': 'Alice'},
@@ -963,7 +981,12 @@ void main() {
       var result = await fn.execute(
         {
           'rules': [
-            {'column': 'value', 'operator': '>=', 'value': 50, 'label': 'gte50'},
+            {
+              'column': 'value',
+              'operator': '>=',
+              'value': 50,
+              'label': 'gte50'
+            },
           ],
           'defaultLabel': 'other',
         },
@@ -990,7 +1013,12 @@ void main() {
       result = await fn.execute(
         {
           'rules': [
-            {'column': 'value', 'operator': '<=', 'value': 50, 'label': 'lte50'},
+            {
+              'column': 'value',
+              'operator': '<=',
+              'value': 50,
+              'label': 'lte50'
+            },
           ],
           'defaultLabel': 'other',
         },
@@ -1003,7 +1031,12 @@ void main() {
       result = await fn.execute(
         {
           'rules': [
-            {'column': 'value', 'operator': '==', 'value': 50.0, 'label': 'eq50'},
+            {
+              'column': 'value',
+              'operator': '==',
+              'value': 50.0,
+              'label': 'eq50'
+            },
           ],
           'defaultLabel': 'other',
         },
@@ -1016,7 +1049,12 @@ void main() {
       result = await fn.execute(
         {
           'rules': [
-            {'column': 'value', 'operator': '!=', 'value': 50.0, 'label': 'ne50'},
+            {
+              'column': 'value',
+              'operator': '!=',
+              'value': 50.0,
+              'label': 'ne50'
+            },
           ],
           'defaultLabel': 'other',
         },
@@ -1031,7 +1069,12 @@ void main() {
       final result = await fn.execute(
         {
           'rules': [
-            {'column': 'value', 'operator': 'LIKE', 'value': 50, 'label': 'match'},
+            {
+              'column': 'value',
+              'operator': 'LIKE',
+              'value': 50,
+              'label': 'match'
+            },
           ],
           'defaultLabel': 'default',
         },
@@ -1045,7 +1088,7 @@ void main() {
     // Null cell value does not match any rule
     test('null cell value does not match any rule', () async {
       final dataWithNull = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': null},
           {'value': 50.0},
@@ -1070,7 +1113,7 @@ void main() {
     // Empty dataset returns zero rows
     test('empty dataset returns zero labeled rows', () async {
       final emptyData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [],
         rowCount: 0,
       );
@@ -1127,7 +1170,12 @@ void main() {
       final result = await fn.execute(
         {
           'rules': [
-            {'column': 'name', 'operator': '==', 'value': 'Alice', 'label': 'alice'},
+            {
+              'column': 'name',
+              'operator': '==',
+              'value': 'Alice',
+              'label': 'alice'
+            },
           ],
           'defaultLabel': 'other',
         },
@@ -1141,7 +1189,7 @@ void main() {
     // Numeric string parsing in _toNum
     test('numeric string comparison via _toNum parsing', () async {
       final stringNumData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'score', type: 'string')],
+        columns: [const AnalysisColumnInfo(name: 'score', type: 'string')],
         rows: [
           {'score': '85'},
           {'score': '45'},
@@ -1207,7 +1255,9 @@ void main() {
 
       final result = await dispatcher.executeFunction(
         functionName: 'descriptive_stats',
-        parameters: {'columns': ['value']},
+        parameters: {
+          'columns': ['value']
+        },
         data: numericData,
       );
       expect(result.functionName, equals('descriptive_stats'));
@@ -1223,7 +1273,9 @@ void main() {
 
       final result = await dispatcher.executeFunction(
         functionName: 'descriptive_stats',
-        parameters: {'columns': ['value']},
+        parameters: {
+          'columns': ['value']
+        },
         data: numericData,
       );
       expect(result, isA<AnalysisFunctionResult>());
@@ -1288,7 +1340,9 @@ void main() {
       // Verify each can be executed without 'no implementation' error
       final statsResult = await dispatcher.executeFunction(
         functionName: 'descriptive_stats',
-        parameters: {'columns': ['value']},
+        parameters: {
+          'columns': ['value']
+        },
         data: numericData,
       );
       expect(statsResult.functionName, equals('descriptive_stats'));
@@ -1398,7 +1452,7 @@ void main() {
     // TC-001: loadPlugin registers the function in catalog and dispatcher
     test('TC-001: loadPlugin registers in catalog and dispatcher', () async {
       final impl = _StubAnalysisFunction('my_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'my_plugin',
         description: 'My plugin function',
         category: 'test',
@@ -1422,7 +1476,7 @@ void main() {
     // TC-002: empty function name throws AnalysisError
     test('TC-002: empty function name throws AnalysisError', () {
       final impl = _StubAnalysisFunction('');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: '',
         description: 'Bad plugin',
         category: 'test',
@@ -1445,7 +1499,7 @@ void main() {
     // TC-003: null supportedSpecRange throws AnalysisError
     test('TC-003: null supportedSpecRange throws AnalysisError', () {
       final impl = _StubAnalysisFunction('no_spec_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'no_spec_plugin',
         description: 'No spec range',
         category: 'test',
@@ -1468,7 +1522,7 @@ void main() {
     // TC-004: duplicate plugin name throws AnalysisError
     test('TC-004: duplicate plugin name throws AnalysisError', () {
       final impl1 = _StubAnalysisFunction('dup_plugin');
-      final manifest1 = PluginManifest(
+      const manifest1 = PluginManifest(
         functionName: 'dup_plugin',
         description: 'First',
         category: 'test',
@@ -1478,7 +1532,7 @@ void main() {
       loader.loadPlugin(manifest1, impl1);
 
       final impl2 = _StubAnalysisFunction('dup_plugin');
-      final manifest2 = PluginManifest(
+      const manifest2 = PluginManifest(
         functionName: 'dup_plugin',
         description: 'Second',
         category: 'test',
@@ -1495,7 +1549,7 @@ void main() {
     // TC-005: unloadPlugin removes from catalog
     test('TC-005: unloadPlugin removes plugin from catalog', () {
       final impl = _StubAnalysisFunction('removable_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'removable_plugin',
         description: 'Removable',
         category: 'test',
@@ -1513,7 +1567,7 @@ void main() {
     // TC-006: getLoadedPlugins returns all loaded plugin names
     test('TC-006: getLoadedPlugins returns loaded names', () {
       loader.loadPlugin(
-        PluginManifest(
+        const PluginManifest(
           functionName: 'plugin_a',
           description: 'A',
           category: 'test',
@@ -1523,7 +1577,7 @@ void main() {
         _StubAnalysisFunction('plugin_a'),
       );
       loader.loadPlugin(
-        PluginManifest(
+        const PluginManifest(
           functionName: 'plugin_b',
           description: 'B',
           category: 'test',
@@ -1541,7 +1595,7 @@ void main() {
     // TC-007: loadPlugin sets plugin field in AnalysisFunctionInfo
     test('TC-007: loadPlugin sets plugin field in function info', () {
       loader.loadPlugin(
-        PluginManifest(
+        const PluginManifest(
           functionName: 'tagged_plugin',
           description: 'Tagged',
           category: 'test',
@@ -1597,10 +1651,11 @@ void main() {
     });
 
     // TC-009 (spec): unloadPlugin does not remove implementation from dispatcher
-    test('TC-009-spec: unloadPlugin removes from catalog but stale dispatcher entry remains',
+    test(
+        'TC-009-spec: unloadPlugin removes from catalog but stale dispatcher entry remains',
         () async {
       final impl = _StubAnalysisFunction('unload_test');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'unload_test',
         description: 'Unload test',
         category: 'test',
@@ -1630,7 +1685,7 @@ void main() {
     // TC-013 (spec): Version compatibility check — compatible range passes
     test('TC-013-spec: compatible version range loads successfully', () {
       final impl = _StubAnalysisFunction('compat_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'compat_plugin',
         description: 'Compatible plugin',
         category: 'test',
@@ -1646,7 +1701,7 @@ void main() {
     // Unload then re-load same plugin
     test('unload then re-load same plugin succeeds', () {
       final impl = _StubAnalysisFunction('reload_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'reload_plugin',
         description: 'Reloadable',
         category: 'test',
@@ -1669,7 +1724,7 @@ void main() {
     // Caret version range compatible
     test('caret version range ^1.0.0 matches currentSpecVersion 1.0.0', () {
       final impl = _StubAnalysisFunction('caret_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'caret_plugin',
         description: 'Caret range',
         category: 'test',
@@ -1684,7 +1739,7 @@ void main() {
     // Caret version range incompatible (^2.0.0 with currentSpecVersion 1.0.0)
     test('caret version range ^2.0.0 is incompatible with 1.0.0', () {
       final impl = _StubAnalysisFunction('caret_incompat');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'caret_incompat',
         description: 'Caret incompatible',
         category: 'test',
@@ -1707,7 +1762,7 @@ void main() {
     // Version range with > constraint
     test('version range >0.9.0 matches 1.0.0', () {
       final impl = _StubAnalysisFunction('gt_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'gt_plugin',
         description: 'Greater than',
         category: 'test',
@@ -1722,7 +1777,7 @@ void main() {
     // Version range with <= constraint
     test('version range <=1.0.0 matches 1.0.0', () {
       final impl = _StubAnalysisFunction('lte_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'lte_plugin',
         description: 'Less than or equal',
         category: 'test',
@@ -1737,7 +1792,7 @@ void main() {
     // Version range with = constraint (exact match)
     test('version range =1.0.0 matches 1.0.0', () {
       final impl = _StubAnalysisFunction('eq_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'eq_plugin',
         description: 'Exact match',
         category: 'test',
@@ -1752,7 +1807,7 @@ void main() {
     // Plain version means exact match
     test('plain version 1.0.0 means exact match', () {
       final impl = _StubAnalysisFunction('plain_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'plain_plugin',
         description: 'Plain version',
         category: 'test',
@@ -1767,7 +1822,7 @@ void main() {
     // Plain version that does not match
     test('plain version 2.0.0 does not match 1.0.0', () {
       final impl = _StubAnalysisFunction('plain_nomatch');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'plain_nomatch',
         description: 'Plain no match',
         category: 'test',
@@ -1790,7 +1845,7 @@ void main() {
     // Invalid version in range
     test('invalid version in range is treated as incompatible', () {
       final impl = _StubAnalysisFunction('badver_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'badver_plugin',
         description: 'Bad version',
         category: 'test',
@@ -1819,7 +1874,7 @@ void main() {
       );
 
       final impl = _StubAnalysisFunction('v25_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'v25_plugin',
         description: 'For 2.x',
         category: 'test',
@@ -1832,7 +1887,8 @@ void main() {
     });
 
     // Invalid currentSpecVersion causes incompatibility
-    test('invalid currentSpecVersion causes all plugins to be incompatible', () {
+    test('invalid currentSpecVersion causes all plugins to be incompatible',
+        () {
       final badLoader = PluginLoader(
         catalog: catalog,
         dispatcher: dispatcher,
@@ -1840,7 +1896,7 @@ void main() {
       );
 
       final impl = _StubAnalysisFunction('bad_current');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'bad_current',
         description: 'Bad current',
         category: 'test',
@@ -1863,7 +1919,7 @@ void main() {
     // TC-014 (spec): Version compatibility check — incompatible range throws
     test('TC-014-spec: incompatible version range throws', () {
       final impl = _StubAnalysisFunction('incompat_plugin');
-      final manifest = PluginManifest(
+      const manifest = PluginManifest(
         functionName: 'incompat_plugin',
         description: 'Incompatible plugin',
         category: 'test',
@@ -1910,7 +1966,7 @@ void main() {
     test('trend with single data point returns slope=0 and intercept=value',
         () async {
       final singleData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 42.0},
         ],
@@ -1928,7 +1984,7 @@ void main() {
     // trend with empty data returns slope=0, intercept=0.0
     test('trend with empty data returns slope=0 and intercept=0.0', () async {
       final emptyData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [],
         rowCount: 0,
       );
@@ -1944,7 +2000,7 @@ void main() {
     // trend with two data points computes correct slope and intercept
     test('trend with two data points computes correct slope', () async {
       final twoData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 5.0},
           {'value': 15.0},
@@ -1964,7 +2020,7 @@ void main() {
     // unknown method throws AnalysisError
     test('unknown method throws AnalysisError', () async {
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 10.0},
         ],
@@ -1989,7 +2045,7 @@ void main() {
     // moving average with windowSize=1 returns same values
     test('moving average with windowSize=1 returns original values', () async {
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 10.0},
           {'value': 20.0},
@@ -2014,8 +2070,8 @@ void main() {
         () async {
       final data = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: 'label', type: 'string'),
-          AnalysisColumnInfo(name: 'score', type: 'double'),
+          const AnalysisColumnInfo(name: 'label', type: 'string'),
+          const AnalysisColumnInfo(name: 'score', type: 'double'),
         ],
         rows: [
           {'label': 'a', 'score': 10.0},
@@ -2039,7 +2095,7 @@ void main() {
     // windowSize larger than data length produces all nulls
     test('windowSize larger than data length produces all nulls', () async {
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 10.0},
           {'value': 20.0},
@@ -2061,7 +2117,7 @@ void main() {
     test('data with all non-numeric values computes on empty values list',
         () async {
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'string')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'string')],
         rows: [
           {'value': 'abc'},
           {'value': 'def'},
@@ -2080,7 +2136,7 @@ void main() {
     // default method is moving_avg when not specified
     test('default method is moving_avg', () async {
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 10.0},
           {'value': 20.0},
@@ -2206,8 +2262,11 @@ void main() {
       } on AnalysisError catch (e) {
         expect(e.code, equals('analysis.execution_error'));
         expect(e.step, equals('function:failing_fn'));
-        expect(e.details?['parameters'], isA<Map>());
-        expect(e.details?['parameters']['testKey'], equals('testValue'));
+        expect(e.details?['parameters'], isA<Map<dynamic, dynamic>>());
+        expect(
+          (e.details?['parameters'] as Map<dynamic, dynamic>)['testKey'],
+          equals('testValue'),
+        );
       }
     });
 
@@ -2253,7 +2312,7 @@ void main() {
     // zscore with zero standard deviation (all identical values) => break
     test('zscore with zero std dev returns no anomalies', () async {
       final identicalData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 5.0},
           {'value': 5.0},
@@ -2274,7 +2333,7 @@ void main() {
     // zscore with fewer than 2 values => break
     test('zscore with single value returns no anomalies', () async {
       final singleData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 42.0},
         ],
@@ -2292,7 +2351,7 @@ void main() {
     // EWMA with empty values => break
     test('ewma with empty values returns no anomalies', () async {
       final emptyData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [],
         rowCount: 0,
       );
@@ -2309,7 +2368,7 @@ void main() {
     test('ewma with identical values (residualStd zero) returns no anomalies',
         () async {
       final identicalData = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 10.0},
           {'value': 10.0},
@@ -2333,7 +2392,7 @@ void main() {
         () => fn.execute(
           {'method': 'threshold', 'column': 'value'},
           AnalysisDataSet(
-            columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+            columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
             rows: [
               {'value': 10.0},
             ],
@@ -2353,7 +2412,7 @@ void main() {
     // IQR with values below lower bound
     test('iqr detects anomaly below lower bound', () async {
       final dataWithLow = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': -100.0},
           {'value': 10.0},
@@ -2394,7 +2453,7 @@ void main() {
     // No numeric column found throws
     test('throws when no numeric column found', () async {
       final stringOnly = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'name', type: 'string')],
+        columns: [const AnalysisColumnInfo(name: 'name', type: 'string')],
         rows: [
           {'name': 'hello'},
         ],
@@ -2416,7 +2475,7 @@ void main() {
     // Threshold exact boundary: value == threshold is NOT anomaly (only >)
     test('threshold exact boundary value is not detected', () async {
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 50.0},
         ],
@@ -2456,18 +2515,19 @@ void main() {
     test('transitions with empty data returns empty map', () async {
       final emptyData = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: 'event', type: 'string'),
+          const AnalysisColumnInfo(name: 'event', type: 'string'),
         ],
         rows: [],
         rowCount: 0,
       );
 
       final result = await fn.execute(
-        {'metrics': ['transitions']},
+        {
+          'metrics': ['transitions']
+        },
         emptyData,
       );
-      final transitions =
-          result.results['transitions'] as Map<String, dynamic>;
+      final transitions = result.results['transitions'] as Map<String, dynamic>;
       expect(transitions, isEmpty);
     });
 
@@ -2475,7 +2535,7 @@ void main() {
     test('transitions with single row returns empty map', () async {
       final singleRow = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: 'event', type: 'string'),
+          const AnalysisColumnInfo(name: 'event', type: 'string'),
         ],
         rows: [
           {'event': 'start'},
@@ -2484,11 +2544,12 @@ void main() {
       );
 
       final result = await fn.execute(
-        {'metrics': ['transitions']},
+        {
+          'metrics': ['transitions']
+        },
         singleRow,
       );
-      final transitions =
-          result.results['transitions'] as Map<String, dynamic>;
+      final transitions = result.results['transitions'] as Map<String, dynamic>;
       expect(transitions, isEmpty);
     });
 
@@ -2496,7 +2557,7 @@ void main() {
     test('frequency with single event returns count of 1', () async {
       final singleEvent = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: 'event', type: 'string'),
+          const AnalysisColumnInfo(name: 'event', type: 'string'),
         ],
         rows: [
           {'event': 'click'},
@@ -2505,7 +2566,9 @@ void main() {
       );
 
       final result = await fn.execute(
-        {'metrics': ['frequency']},
+        {
+          'metrics': ['frequency']
+        },
         singleEvent,
       );
       final frequency = result.results['frequency'] as Map<String, dynamic>;
@@ -2516,8 +2579,8 @@ void main() {
     test('mtbf with no failure events returns 0', () async {
       final noFailures = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
-          AnalysisColumnInfo(name: 'event', type: 'string'),
+          const AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
+          const AnalysisColumnInfo(name: 'event', type: 'string'),
         ],
         rows: [
           {'_timestamp': DateTime(2024, 1, 1), 'event': 'success'},
@@ -2527,7 +2590,9 @@ void main() {
       );
 
       final result = await fn.execute(
-        {'metrics': ['mtbf']},
+        {
+          'metrics': ['mtbf']
+        },
         noFailures,
       );
       expect(result.results['mtbf'], equals(0));
@@ -2537,8 +2602,8 @@ void main() {
     test('mttr with no recovery events returns 0', () async {
       final noRecovery = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
-          AnalysisColumnInfo(name: 'event', type: 'string'),
+          const AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
+          const AnalysisColumnInfo(name: 'event', type: 'string'),
         ],
         rows: [
           {'_timestamp': DateTime(2024, 1, 1), 'event': 'error'},
@@ -2548,7 +2613,9 @@ void main() {
       );
 
       final result = await fn.execute(
-        {'metrics': ['mttr']},
+        {
+          'metrics': ['mttr']
+        },
         noRecovery,
       );
       expect(result.results['mttr'], equals(0));
@@ -2558,8 +2625,8 @@ void main() {
     test('mttr with recovery before failure yields 0', () async {
       final recoveryBeforeFailure = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
-          AnalysisColumnInfo(name: 'event', type: 'string'),
+          const AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
+          const AnalysisColumnInfo(name: 'event', type: 'string'),
         ],
         rows: [
           {'_timestamp': DateTime(2024, 1, 1, 10, 0), 'event': 'resolved'},
@@ -2569,7 +2636,9 @@ void main() {
       );
 
       final result = await fn.execute(
-        {'metrics': ['mttr']},
+        {
+          'metrics': ['mttr']
+        },
         recoveryBeforeFailure,
       );
       // Recovery is before failure, so no valid pair
@@ -2580,8 +2649,8 @@ void main() {
     test('mtbf with single failure event returns 0', () async {
       final singleFailure = AnalysisDataSet(
         columns: [
-          AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
-          AnalysisColumnInfo(name: 'event', type: 'string'),
+          const AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
+          const AnalysisColumnInfo(name: 'event', type: 'string'),
         ],
         rows: [
           {'_timestamp': DateTime(2024, 1, 1), 'event': 'error'},
@@ -2591,7 +2660,9 @@ void main() {
       );
 
       final result = await fn.execute(
-        {'metrics': ['mtbf']},
+        {
+          'metrics': ['mtbf']
+        },
         singleFailure,
       );
       expect(result.results['mtbf'], equals(0));
@@ -2612,7 +2683,7 @@ void main() {
     test('TC-001: decomposes sinusoidal data with period=24', () async {
       const period = 24;
       const numCycles = 4;
-      final n = period * numCycles;
+      const n = period * numCycles;
 
       // Generate sinusoidal data: trend + seasonal + small noise
       final rows = <Map<String, dynamic>>[];
@@ -2623,7 +2694,7 @@ void main() {
       }
 
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: rows,
         rowCount: n,
       );
@@ -2661,7 +2732,7 @@ void main() {
     test('TC-002: detects strong seasonality with strength near 1.0', () async {
       const period = 12;
       const numCycles = 4;
-      final n = period * numCycles;
+      const n = period * numCycles;
 
       // Pure seasonal signal with linear trend, no noise
       final rows = <Map<String, dynamic>>[];
@@ -2672,7 +2743,7 @@ void main() {
       }
 
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: rows,
         rowCount: n,
       );
@@ -2690,7 +2761,7 @@ void main() {
     test('TC-003: random data yields low seasonality strength', () async {
       const period = 7;
       final rng = math.Random(42);
-      final n = period * 10;
+      const n = period * 10;
 
       final rows = <Map<String, dynamic>>[];
       for (var i = 0; i < n; i++) {
@@ -2698,7 +2769,7 @@ void main() {
       }
 
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: rows,
         rowCount: n,
       );
@@ -2721,7 +2792,7 @@ void main() {
       }
 
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: rows,
         rowCount: 15,
       );
@@ -2741,7 +2812,7 @@ void main() {
     // TC-005: Period < 2 throws error
     test('TC-005: throws error when period < 2', () async {
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: [
           {'value': 1.0},
           {'value': 2.0},
@@ -2767,7 +2838,7 @@ void main() {
     test('TC-006: trend captures linear trend in data', () async {
       const period = 4;
       const numCycles = 6;
-      final n = period * numCycles;
+      const n = period * numCycles;
 
       // Linear trend with small seasonal component
       final rows = <Map<String, dynamic>>[];
@@ -2778,7 +2849,7 @@ void main() {
       }
 
       final data = AnalysisDataSet(
-        columns: [AnalysisColumnInfo(name: 'value', type: 'double')],
+        columns: [const AnalysisColumnInfo(name: 'value', type: 'double')],
         rows: rows,
         rowCount: n,
       );
@@ -2792,11 +2863,11 @@ void main() {
 
       // Check that trend values in the middle are close to the actual linear trend
       // (edges are null due to moving average)
-      final midIndex = n ~/ 2;
+      const midIndex = n ~/ 2;
       final trendMid = trendResult[midIndex] as double?;
       expect(trendMid, isNotNull);
 
-      final expectedTrend = 10.0 + midIndex * 2.0;
+      const expectedTrend = 10.0 + midIndex * 2.0;
       expect(trendMid!, closeTo(expectedTrend, 1.0));
 
       // Trend should be monotonically increasing in non-null region
@@ -2859,9 +2930,8 @@ class _AnalysisErrorThrowingFunction implements AnalysisFunction {
 
 /// A minimal stub AnalysisFunction for plugin loading tests.
 class _StubAnalysisFunction implements AnalysisFunction {
-  final String _name;
-
   _StubAnalysisFunction(this._name);
+  final String _name;
 
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(

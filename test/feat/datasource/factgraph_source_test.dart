@@ -10,6 +10,7 @@ import 'package:test/test.dart';
 
 /// Configurable mock for FactsPort used by FactGraphSourceAdapter tests.
 class MockFactsPort implements FactsPort {
+  MockFactsPort({this.facts = const []});
   List<FactRecord> facts;
   bool shouldThrow = false;
   String throwMessage = 'Connection refused';
@@ -18,8 +19,6 @@ class MockFactsPort implements FactsPort {
 
   /// Captures the last query for verification.
   FactQuery? lastQuery;
-
-  MockFactsPort({this.facts = const []});
 
   @override
   Future<List<FactRecord>> queryFacts(FactQuery query) async {
@@ -352,7 +351,8 @@ void main() {
     });
 
     // getSourceMetadata with empty facts returns minimal schema
-    test('getSourceMetadata with empty facts returns timestamp-only schema', () async {
+    test('getSourceMetadata with empty facts returns timestamp-only schema',
+        () async {
       factsPort.facts = [];
 
       final schema = await adapter.getSourceMetadata('nonexistent_type');
@@ -371,7 +371,8 @@ void main() {
     });
 
     // _inferType for bool, DateTime, and int values
-    test('fact content with various types produces correct column types', () async {
+    test('fact content with various types produces correct column types',
+        () async {
       factsPort.facts = [
         FactRecord(
           id: 'typed-1',

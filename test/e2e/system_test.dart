@@ -24,9 +24,9 @@ class E2eDataSourceAdapter implements DataSourceAdapter {
 
   @override
   Future<AnalysisSourceSchema> getSourceMetadata(String query) async {
-    return AnalysisSourceSchema(
+    return const AnalysisSourceSchema(
       columns: [
-        const AnalysisColumnInfo(name: 'temperature', type: 'double'),
+        AnalysisColumnInfo(name: 'temperature', type: 'double'),
       ],
     );
   }
@@ -40,14 +40,6 @@ class E2eDataSourceAdapter implements DataSourceAdapter {
 // ============================================================================
 
 class _E2eFixture {
-  final SpecManager specManager;
-  final JobManager jobManager;
-  final ArtifactStore artifactStore;
-  final AnalysisPortAdapter adapter;
-  final McpToolHandler toolHandler;
-  final McpResourceHandler resourceHandler;
-  final FunctionCatalog catalog;
-
   _E2eFixture._({
     required this.specManager,
     required this.jobManager,
@@ -170,6 +162,13 @@ class _E2eFixture {
       catalog: catalog,
     );
   }
+  final SpecManager specManager;
+  final JobManager jobManager;
+  final ArtifactStore artifactStore;
+  final AnalysisPortAdapter adapter;
+  final McpToolHandler toolHandler;
+  final McpResourceHandler resourceHandler;
+  final FunctionCatalog catalog;
 }
 
 // ============================================================================
@@ -219,7 +218,7 @@ void main() {
         'analysis.get_artifacts',
         {'jobId': jobId},
       );
-      expect(artifactResult, containsPair('artifacts', isA<List>()));
+      expect(artifactResult, containsPair('artifacts', isA<List<dynamic>>()));
     });
 
     // E2E-002: Resource resolution via MCP
@@ -238,7 +237,7 @@ void main() {
       final result =
           await f.resourceHandler.resolveResource('analysis:///catalog');
 
-      expect(result, containsPair('functions', isA<List>()));
+      expect(result, containsPair('functions', isA<List<dynamic>>()));
       expect(result, containsPair('count', isA<int>()));
 
       final count = result['count'] as int;
@@ -274,7 +273,7 @@ void main() {
         {'spec': newSpec.toJson()},
         rbacContext: opCtx,
       );
-      expect(createResult, containsPair('error', isA<Map>()));
+      expect(createResult, containsPair('error', isA<Map<dynamic, dynamic>>()));
       final error = createResult['error'] as Map<String, dynamic>;
       expect(error['code'], 'governance.unauthorized');
     });
@@ -331,15 +330,19 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [
           AnalysisOutputDef(
+            from: 'descriptive_stats',
             type: AnalysisArtifactType.metric,
             name: 'temp_stats',
           ),
           AnalysisOutputDef(
+            from: 'descriptive_stats',
             type: AnalysisArtifactType.alert,
             name: 'temp_alert',
           ),
@@ -368,7 +371,7 @@ void main() {
         'analysis.get_artifacts',
         {'jobId': jobId},
       );
-      expect(artifactResult, containsPair('artifacts', isA<List>()));
+      expect(artifactResult, containsPair('artifacts', isA<List<dynamic>>()));
     });
 
     // IT-005: Streaming lifecycle

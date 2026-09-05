@@ -2,15 +2,14 @@ import 'package:mcp_bundle/ports.dart';
 
 /// Current actor role and permissions for authorization checks.
 class RbacContext {
-  final String actorId;
-  final String role; // operator, engineer, admin
-  final List<String> groups;
-
   const RbacContext({
     required this.actorId,
     required this.role,
     this.groups = const [],
   });
+  final String actorId;
+  final String role; // operator, engineer, admin
+  final List<String> groups;
 }
 
 /// Enforces role-based access control.

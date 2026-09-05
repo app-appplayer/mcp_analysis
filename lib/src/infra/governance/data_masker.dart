@@ -9,10 +9,8 @@ class DataMasker {
     List<AnalysisArtifact> artifacts,
     Map<String, bool> maskConfig,
   ) {
-    final maskedColumns = maskConfig.entries
-        .where((e) => e.value)
-        .map((e) => e.key)
-        .toSet();
+    final maskedColumns =
+        maskConfig.entries.where((e) => e.value).map((e) => e.key).toSet();
 
     if (maskedColumns.isEmpty) return artifacts;
 

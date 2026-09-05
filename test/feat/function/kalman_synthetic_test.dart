@@ -36,8 +36,8 @@ void main() {
     test('level model smooths a constant under noise', () async {
       final rng = math.Random(5);
       final z = [for (var i = 0; i < 300; i++) 50.0 + (rng.nextDouble() - 0.5)];
-      final r = await KalmanFilterFunction()
-          .execute({'model': 'level'}, _series(z));
+      final r =
+          await KalmanFilterFunction().execute({'model': 'level'}, _series(z));
       expect(r.results['level'], closeTo(50.0, 0.3));
       final filtered = (r.results['filtered'] as List).cast<double>();
       // Filtered tail variance well below raw noise.
@@ -68,8 +68,7 @@ void main() {
       expect(a.metadata?['seed'], 42);
     });
 
-    test('composite signal: trend + sine + step composes correctly',
-        () async {
+    test('composite signal: trend + sine + step composes correctly', () async {
       final q = spec({
         'samples': 100,
         'sampleRate': 10,

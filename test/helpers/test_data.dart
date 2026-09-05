@@ -26,12 +26,15 @@ AnalysisSpec createTestSpec({
         [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
     outputs: outputs ??
         [
           AnalysisOutputDef(
+            from: 'descriptive_stats',
             type: AnalysisArtifactType.metric,
             name: 'temperature_stats',
           ),
@@ -63,8 +66,7 @@ AnalysisDataSet createTestDataSet({
   return AnalysisDataSet(
     columns: [
       const AnalysisColumnInfo(name: '_timestamp', type: 'datetime'),
-      const AnalysisColumnInfo(
-          name: 'temperature', type: 'double', unit: '°F'),
+      const AnalysisColumnInfo(name: 'temperature', type: 'double', unit: '°F'),
       const AnalysisColumnInfo(name: 'status', type: 'string'),
     ],
     rows: rows ?? defaultRows,

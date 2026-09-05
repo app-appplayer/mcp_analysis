@@ -59,6 +59,46 @@ class LockinFunction implements AnalysisFunction {
                 'before reading amplitude/phase (0..0.9)',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'referenceFrequency': AnalysisResultSchema(
+            name: 'referenceFrequency',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Demodulation reference',
+          ),
+          'amplitude': AnalysisResultSchema(
+            name: 'amplitude',
+            type: 'number',
+            description: 'Recovered amplitude',
+          ),
+          'phase': AnalysisResultSchema(
+            name: 'phase',
+            type: 'number',
+            unit: 'rad',
+            description: 'Recovered phase',
+          ),
+          'i': AnalysisResultSchema(
+            name: 'i',
+            type: 'number',
+            description: 'In-phase component',
+          ),
+          'q': AnalysisResultSchema(
+            name: 'q',
+            type: 'number',
+            description: 'Quadrature component',
+          ),
+          'amplitudeSeries': AnalysisResultSchema(
+            name: 'amplitudeSeries',
+            type: 'array',
+            itemType: 'number',
+            description: 'Amplitude over time',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -108,8 +148,8 @@ class LockinFunction implements AnalysisFunction {
     // x = A·sin(2πf t + φ): LP(x·sin)=A/2·cosφ, LP(x·cos)=A/2·sinφ.
     final amplitude = 2 * math.sqrt(iMean * iMean + qMean * qMean);
     final phase = math.atan2(iMean, qMean);
-    final amplitudeSeries = List<double>.generate(x.length,
-        (n) => 2 * math.sqrt(iF[n] * iF[n] + qF[n] * qF[n]));
+    final amplitudeSeries = List<double>.generate(
+        x.length, (n) => 2 * math.sqrt(iF[n] * iF[n] + qF[n] * qF[n]));
 
     return AnalysisFunctionResult(
       functionName: 'lockin',

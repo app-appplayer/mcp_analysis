@@ -4,17 +4,16 @@ import '../../feat/function/function_catalog.dart';
 
 /// MCP resource template descriptor.
 class McpResourceTemplate {
-  final String uriTemplate;
-  final String name;
-  final String description;
-  final String mimeType;
-
   const McpResourceTemplate({
     required this.uriTemplate,
     required this.name,
     required this.description,
     this.mimeType = 'application/json',
   });
+  final String uriTemplate;
+  final String name;
+  final String description;
+  final String mimeType;
 
   Map<String, dynamic> toJson() => {
         'uriTemplate': uriTemplate,
@@ -26,14 +25,13 @@ class McpResourceTemplate {
 
 /// Resolves MCP resource URIs to analysis data.
 class McpResourceHandler {
-  final AnalysisPort _analysisPort;
-  final FunctionCatalog _functionCatalog;
-
   McpResourceHandler({
     required AnalysisPort analysisPort,
     required FunctionCatalog functionCatalog,
   })  : _analysisPort = analysisPort,
         _functionCatalog = functionCatalog;
+  final AnalysisPort _analysisPort;
+  final FunctionCatalog _functionCatalog;
 
   /// Resolve a resource URI and return its content.
   Future<Map<String, dynamic>> resolveResource(String uri) async {
@@ -60,8 +58,7 @@ class McpResourceHandler {
       'catalog' => _resolveCatalog(),
       _ => throw AnalysisError(
           code: 'mcp.unknown_resource',
-          message:
-              'Unknown resource type: "${segments.first}". '
+          message: 'Unknown resource type: "${segments.first}". '
               'Available: spec, artifact, job, catalog',
         ),
     };
@@ -88,8 +85,7 @@ class McpResourceHandler {
 
     if (requestedVersion != null) {
       spec = specs
-          .where(
-              (s) => s.specId == specId && s.version == requestedVersion)
+          .where((s) => s.specId == specId && s.version == requestedVersion)
           .firstOrNull;
       if (spec == null) {
         throw AnalysisError(

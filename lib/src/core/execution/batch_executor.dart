@@ -9,24 +9,13 @@ import '../artifact/artifact_store.dart';
 import '../artifact/provenance_tracker.dart';
 import 'job_manager.dart';
 import 'retry_policy.dart';
+import 'source_merger.dart';
+import 'step_input_resolver.dart';
 import 'step_logger.dart';
 
 /// Executes analysis in batch mode against historical data.
 /// Timeout: 30 minutes. Retry: 3 retries with exponential backoff.
 class BatchExecutor {
-  final DataSourceRegistry _dataSourceRegistry;
-  final TransformPipeline _transformPipeline;
-  final FunctionDispatcher _functionDispatcher;
-  final ArtifactBuilder _artifactBuilder;
-  final ArtifactStore _artifactStore;
-  final ProvenanceTracker _provenanceTracker;
-  final AlertEvaluator _alertEvaluator;
-  final JobManager _jobManager;
-  final RetryPolicy _retryPolicy;
-
-  /// Batch execution timeout (default: 30 minutes).
-  final Duration timeout;
-
   BatchExecutor({
     required DataSourceRegistry dataSourceRegistry,
     required TransformPipeline transformPipeline,
@@ -47,6 +36,18 @@ class BatchExecutor {
         _alertEvaluator = alertEvaluator,
         _jobManager = jobManager,
         _retryPolicy = retryPolicy ?? const RetryPolicy();
+  final DataSourceRegistry _dataSourceRegistry;
+  final TransformPipeline _transformPipeline;
+  final FunctionDispatcher _functionDispatcher;
+  final ArtifactBuilder _artifactBuilder;
+  final ArtifactStore _artifactStore;
+  final ProvenanceTracker _provenanceTracker;
+  final AlertEvaluator _alertEvaluator;
+  final JobManager _jobManager;
+  final RetryPolicy _retryPolicy;
+
+  /// Batch execution timeout (default: 30 minutes).
+  final Duration timeout;
 
   /// Execute a batch analysis job.
   Future<AnalysisJob> execute({
@@ -102,7 +103,9 @@ class BatchExecutor {
             );
           });
           sw.stop();
-          dataSets.add(dataSet);
+          // Aliases apply as the source is read, so everything
+          // downstream sees the names the spec chose.
+          dataSets.add(const SourceMerger().applyAliases(source, dataSet));
           stepLogger.logStep(
             step: 'source:${source.sourceType.name}',
             inputSize: 0,
@@ -136,7 +139,7 @@ class BatchExecutor {
       }
 
       // Merge data sets: column union, null fill, timestamp sort
-      var currentData = _mergeDataSets(dataSets);
+      var currentData = const SourceMerger().merge(spec.inputSources, dataSets);
 
       // Phase 2: Transform
       if (spec.transforms.isNotEmpty) {
@@ -160,16 +163,43 @@ class BatchExecutor {
       final functionResults = <String, dynamic>{};
       for (final step in spec.analysisSteps) {
         final sw = Stopwatch()..start();
+        // A step reads the source dataset unless it names an earlier
+        // step's result field; the validator has already checked that the
+        // name resolves and runs first.
+        var stepData = step.input == null
+            ? currentData
+            : const StepInputResolver().resolve(step.input!, functionResults);
+        // Spec-level transforms run once over the merged sources; a step's
+        // own run here, which is the only place a reshaping between two
+        // steps can go.
+        if (step.transforms.isNotEmpty) {
+          final beforeTransform = stepData.rowCount;
+          final transformSw = Stopwatch()..start();
+          final stepTransform = await _transformPipeline.execute(
+            stepData,
+            step.transforms,
+          );
+          transformSw.stop();
+          stepData = stepTransform.dataSet;
+          stepLogger.logStep(
+            step: 'transform:${step.resultKey}',
+            inputSize: beforeTransform,
+            outputSize: stepData.rowCount,
+            executionTime: transformSw.elapsed,
+          );
+        }
         final result = await _functionDispatcher.executeFunction(
           functionName: step.function,
           parameters: step.parameters,
-          data: currentData,
+          data: stepData,
         );
         sw.stop();
-        functionResults[step.function] = result.results;
+        functionResults[step.resultKey] = result.results;
         stepLogger.logStep(
-          step: 'function:${step.function}',
-          inputSize: currentData.rowCount,
+          step: step.id == null
+              ? 'function:${step.function}'
+              : 'function:${step.function}#${step.id}',
+          inputSize: stepData.rowCount,
           outputSize: result.results.length,
           executionTime: sw.elapsed,
         );
@@ -190,6 +220,7 @@ class BatchExecutor {
         outputDefs: spec.outputs,
         functionResults: functionResults,
         provenance: provenance,
+        onSkipped: errors.add,
       );
 
       await _artifactStore.saveAll(artifacts);
@@ -236,46 +267,4 @@ class BatchExecutor {
   }
 
   /// Merge multiple datasets: column union, null fill, timestamp sort.
-  AnalysisDataSet _mergeDataSets(List<AnalysisDataSet> dataSets) {
-    if (dataSets.length == 1) return dataSets.first;
-
-    // Column union
-    final columnMap = <String, AnalysisColumnInfo>{};
-    for (final ds in dataSets) {
-      for (final col in ds.columns) {
-        columnMap.putIfAbsent(col.name, () => col);
-      }
-    }
-    final mergedColumns = columnMap.values.toList();
-    final allColumnNames = columnMap.keys.toSet();
-
-    // Concatenate rows with null fill for missing columns
-    final mergedRows = <Map<String, dynamic>>[];
-    for (final ds in dataSets) {
-      for (final row in ds.rows) {
-        final newRow = <String, dynamic>{};
-        for (final colName in allColumnNames) {
-          newRow[colName] = row[colName]; // null if missing
-        }
-        mergedRows.add(newRow);
-      }
-    }
-
-    // Sort by _timestamp ascending
-    mergedRows.sort((a, b) {
-      final aTs = a['_timestamp'];
-      final bTs = b['_timestamp'];
-      if (aTs is DateTime && bTs is DateTime) return aTs.compareTo(bTs);
-      if (aTs is DateTime) return -1;
-      if (bTs is DateTime) return 1;
-      return 0;
-    });
-
-    return AnalysisDataSet(
-      columns: mergedColumns,
-      rows: mergedRows,
-      rowCount: mergedRows.length,
-      metadata: {'mergedSourceCount': dataSets.length},
-    );
-  }
 }

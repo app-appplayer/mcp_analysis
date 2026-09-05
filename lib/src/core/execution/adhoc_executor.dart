@@ -8,23 +8,13 @@ import '../artifact/artifact_builder.dart';
 import '../artifact/artifact_store.dart';
 import '../artifact/provenance_tracker.dart';
 import 'job_manager.dart';
+import 'source_merger.dart';
+import 'step_input_resolver.dart';
 import 'step_logger.dart';
 
 /// Executes analysis in ad-hoc mode for fast, synchronous results.
 /// Timeout: 5 minutes. No retry. No progress updates.
 class AdhocExecutor {
-  final DataSourceRegistry _dataSourceRegistry;
-  final TransformPipeline _transformPipeline;
-  final FunctionDispatcher _functionDispatcher;
-  final ArtifactBuilder _artifactBuilder;
-  final ArtifactStore _artifactStore;
-  final ProvenanceTracker _provenanceTracker;
-  final AlertEvaluator _alertEvaluator;
-  final JobManager _jobManager;
-
-  /// Ad-hoc execution timeout (default: 5 minutes).
-  final Duration timeout;
-
   AdhocExecutor({
     required DataSourceRegistry dataSourceRegistry,
     required TransformPipeline transformPipeline,
@@ -43,6 +33,17 @@ class AdhocExecutor {
         _provenanceTracker = provenanceTracker,
         _alertEvaluator = alertEvaluator,
         _jobManager = jobManager;
+  final DataSourceRegistry _dataSourceRegistry;
+  final TransformPipeline _transformPipeline;
+  final FunctionDispatcher _functionDispatcher;
+  final ArtifactBuilder _artifactBuilder;
+  final ArtifactStore _artifactStore;
+  final ProvenanceTracker _provenanceTracker;
+  final AlertEvaluator _alertEvaluator;
+  final JobManager _jobManager;
+
+  /// Ad-hoc execution timeout (default: 5 minutes).
+  final Duration timeout;
 
   /// Execute an ad-hoc analysis job.
   Future<AnalysisJob> execute({
@@ -95,7 +96,9 @@ class AdhocExecutor {
             timeRange: source.timeRange ?? job.inputRange,
           );
           sw.stop();
-          dataSets.add(dataSet);
+          // Aliases apply as the source is read, so everything
+          // downstream sees the names the spec chose.
+          dataSets.add(const SourceMerger().applyAliases(source, dataSet));
           stepLogger.logStep(
             step: 'source:${source.sourceType.name}',
             inputSize: 0,
@@ -104,7 +107,11 @@ class AdhocExecutor {
           );
         } catch (e) {
           sw.stop();
-          // Fail fast: do not collect errors and continue
+          // Fail fast: do not collect errors and continue, and do not
+          // retry either. Batch execution retries a transient source
+          // failure because nobody is waiting on it; an ad-hoc run is
+          // someone waiting, and three backoffs is seven seconds of
+          // silence before the same answer.
           return _jobManager.failJob(
             job.jobId,
             errors: [
@@ -135,7 +142,7 @@ class AdhocExecutor {
       }
 
       // Merge data sets (same logic as batch)
-      var currentData = _mergeDataSets(dataSets);
+      var currentData = const SourceMerger().merge(spec.inputSources, dataSets);
 
       // Phase 2: Transform
       if (spec.transforms.isNotEmpty) {
@@ -158,16 +165,43 @@ class AdhocExecutor {
       final functionResults = <String, dynamic>{};
       for (final step in spec.analysisSteps) {
         final sw = Stopwatch()..start();
+        // A step reads the source dataset unless it names an earlier
+        // step's result field; the validator has already checked that the
+        // name resolves and runs first.
+        var stepData = step.input == null
+            ? currentData
+            : const StepInputResolver().resolve(step.input!, functionResults);
+        // Spec-level transforms run once over the merged sources; a step's
+        // own run here, which is the only place a reshaping between two
+        // steps can go.
+        if (step.transforms.isNotEmpty) {
+          final beforeTransform = stepData.rowCount;
+          final transformSw = Stopwatch()..start();
+          final stepTransform = await _transformPipeline.execute(
+            stepData,
+            step.transforms,
+          );
+          transformSw.stop();
+          stepData = stepTransform.dataSet;
+          stepLogger.logStep(
+            step: 'transform:${step.resultKey}',
+            inputSize: beforeTransform,
+            outputSize: stepData.rowCount,
+            executionTime: transformSw.elapsed,
+          );
+        }
         final result = await _functionDispatcher.executeFunction(
           functionName: step.function,
           parameters: _resolveStepParams(step.parameters, resolvedParams),
-          data: currentData,
+          data: stepData,
         );
         sw.stop();
-        functionResults[step.function] = result.results;
+        functionResults[step.resultKey] = result.results;
         stepLogger.logStep(
-          step: 'function:${step.function}',
-          inputSize: currentData.rowCount,
+          step: step.id == null
+              ? 'function:${step.function}'
+              : 'function:${step.function}#${step.id}',
+          inputSize: stepData.rowCount,
           outputSize: result.results.length,
           executionTime: sw.elapsed,
         );
@@ -187,6 +221,7 @@ class AdhocExecutor {
         outputDefs: spec.outputs,
         functionResults: functionResults,
         provenance: provenance,
+        onSkipped: errors.add,
       );
 
       await _artifactStore.saveAll(artifacts);
@@ -241,43 +276,4 @@ class AdhocExecutor {
   }
 
   /// Merge multiple datasets: column union, null fill, timestamp sort.
-  AnalysisDataSet _mergeDataSets(List<AnalysisDataSet> dataSets) {
-    if (dataSets.length == 1) return dataSets.first;
-
-    final columnMap = <String, AnalysisColumnInfo>{};
-    for (final ds in dataSets) {
-      for (final col in ds.columns) {
-        columnMap.putIfAbsent(col.name, () => col);
-      }
-    }
-    final mergedColumns = columnMap.values.toList();
-    final allColumnNames = columnMap.keys.toSet();
-
-    final mergedRows = <Map<String, dynamic>>[];
-    for (final ds in dataSets) {
-      for (final row in ds.rows) {
-        final newRow = <String, dynamic>{};
-        for (final colName in allColumnNames) {
-          newRow[colName] = row[colName];
-        }
-        mergedRows.add(newRow);
-      }
-    }
-
-    mergedRows.sort((a, b) {
-      final aTs = a['_timestamp'];
-      final bTs = b['_timestamp'];
-      if (aTs is DateTime && bTs is DateTime) return aTs.compareTo(bTs);
-      if (aTs is DateTime) return -1;
-      if (bTs is DateTime) return 1;
-      return 0;
-    });
-
-    return AnalysisDataSet(
-      columns: mergedColumns,
-      rows: mergedRows,
-      rowCount: mergedRows.length,
-      metadata: {'mergedSourceCount': dataSets.length},
-    );
-  }
 }

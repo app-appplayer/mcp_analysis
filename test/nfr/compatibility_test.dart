@@ -37,8 +37,7 @@ void main() {
           expect(
             content.contains("package:$pkg"),
             isFalse,
-            reason:
-                '${file.path} must not import ML library "$pkg"',
+            reason: '${file.path} must not import ML library "$pkg"',
           );
         }
       }
@@ -90,8 +89,7 @@ void main() {
         expect(
           content.contains("import '../../feat/function/builtin/"),
           isFalse,
-          reason:
-              '${file.path} must not directly import built-in functions',
+          reason: '${file.path} must not directly import built-in functions',
         );
       }
     });
@@ -302,7 +300,8 @@ void main() {
       expect(
         adapterContent.contains('implements AnalysisPort'),
         isTrue,
-        reason: 'AnalysisPortAdapter must implement AnalysisPort from mcp_bundle',
+        reason:
+            'AnalysisPortAdapter must implement AnalysisPort from mcp_bundle',
       );
     });
   });

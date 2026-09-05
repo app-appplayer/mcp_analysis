@@ -47,16 +47,16 @@ void main() {
           AnalysisColumnInfo(name: 'b', type: 'double'),
         ],
         rows: [
-          for (var i = 0; i < 300; i++)
-            <String, dynamic>{'a': a[i], 'b': b[i]},
+          for (var i = 0; i < 300; i++) <String, dynamic>{'a': a[i], 'b': b[i]},
         ],
         rowCount: 300,
       );
-      final r = await CrossCorrelationFunction()
-          .execute({'columns': ['a', 'b'], 'maxLag': 20}, data);
+      final r = await CrossCorrelationFunction().execute({
+        'columns': ['a', 'b'],
+        'maxLag': 20
+      }, data);
       expect((r.results['bestLag'] as int).abs(), lag);
-      expect((r.results['bestCorrelation'] as double).abs(),
-          greaterThan(0.9));
+      expect((r.results['bestCorrelation'] as double).abs(), greaterThan(0.9));
     });
   });
 
@@ -78,8 +78,7 @@ void main() {
           .execute({'threshold': 10}, _series(stable));
       expect(quiet.results['count'], 0);
 
-      final r = await ChangepointCusumFunction()
-          .execute({}, _series(shifted));
+      final r = await ChangepointCusumFunction().execute({}, _series(shifted));
       final cps = (r.results['changepoints'] as List).cast<int>();
       expect(cps, isNotEmpty);
       expect(cps.first, inInclusiveRange(98, 110),
@@ -103,8 +102,10 @@ void main() {
     test('robustly flags one gross outlier', () async {
       final x = [for (var i = 0; i < 99; i++) 10.0 + (i % 5) * 0.1];
       x.add(100.0); // gross outlier
-      final r = await AnomalyDetectFunction().execute(
-          {'columns': ['v'], 'method': 'mad'}, _series(x));
+      final r = await AnomalyDetectFunction().execute({
+        'columns': ['v'],
+        'method': 'mad'
+      }, _series(x));
       final anomalies = r.results['anomalies'] as List;
       expect(anomalies, hasLength(1));
       expect((anomalies.single as Map)['value'], 100.0);
@@ -153,8 +154,7 @@ void main() {
       final x = [
         for (var i = 0; i < 48; i++) math.sin(2 * math.pi * i / 12),
       ];
-      final r = await DifferencingFunction()
-          .execute({'lag': 12}, _series(x));
+      final r = await DifferencingFunction().execute({'lag': 12}, _series(x));
       final out = (r.results['values'] as List).cast<double>();
       expect(out.every((v) => v.abs() < 1e-9), isTrue);
     });

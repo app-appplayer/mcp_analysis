@@ -11,8 +11,8 @@ double _mean(List<double> x) =>
 double _sampleStd(List<double> x) {
   if (x.length < 2) return 0.0;
   final m = _mean(x);
-  final v = x.map((e) => (e - m) * (e - m)).reduce((a, b) => a + b) /
-      (x.length - 1);
+  final v =
+      x.map((e) => (e - m) * (e - m)).reduce((a, b) => a + b) / (x.length - 1);
   return math.sqrt(v);
 }
 
@@ -48,6 +48,35 @@ class HistogramFunction implements AnalysisFunction {
             name: 'max',
             type: 'number',
             description: 'Explicit upper edge (data max otherwise)',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'binEdges': AnalysisResultSchema(
+            name: 'binEdges',
+            type: 'array',
+            itemType: 'number',
+            description: 'Bin boundaries',
+          ),
+          'counts': AnalysisResultSchema(
+            name: 'counts',
+            type: 'array',
+            itemType: 'number',
+            description: 'Count per bin',
+          ),
+          'underflow': AnalysisResultSchema(
+            name: 'underflow',
+            type: 'number',
+            description: 'Values below the first edge',
+          ),
+          'overflow': AnalysisResultSchema(
+            name: 'overflow',
+            type: 'number',
+            description: 'Values above the last edge',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -107,6 +136,31 @@ class CovarianceMatrixFunction implements AnalysisFunction {
             name: 'columns',
             type: 'array',
             description: 'Numeric columns (default: all numeric)',
+          ),
+        },
+        results: const {
+          'columns': AnalysisResultSchema(
+            name: 'columns',
+            type: 'array',
+            itemType: 'string',
+            description: 'Analyzed columns',
+          ),
+          'covariance': AnalysisResultSchema(
+            name: 'covariance',
+            type: 'array',
+            itemType: 'object',
+            description: 'Covariance matrix rows',
+          ),
+          'correlation': AnalysisResultSchema(
+            name: 'correlation',
+            type: 'array',
+            itemType: 'object',
+            description: 'Correlation matrix rows',
+          ),
+          'rowCount': AnalysisResultSchema(
+            name: 'rowCount',
+            type: 'number',
+            description: 'Rows used',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -172,8 +226,7 @@ class RegressionFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'regression',
-        description:
-            'Least-squares polynomial regression (linear by default)',
+        description: 'Least-squares polynomial regression (linear by default)',
         parameters: {
           'columns': AnalysisParameterSchema(
             name: 'columns',
@@ -190,6 +243,25 @@ class RegressionFunction implements AnalysisFunction {
             type: 'number',
             defaultValue: 1,
             description: 'Polynomial degree',
+          ),
+        },
+        results: const {
+          'coefficients': AnalysisResultSchema(
+            name: 'coefficients',
+            type: 'array',
+            itemType: 'number',
+            description: 'Fitted coefficients',
+          ),
+          'rSquared': AnalysisResultSchema(
+            name: 'rSquared',
+            type: 'number',
+            description: 'Coefficient of determination',
+          ),
+          'predictions': AnalysisResultSchema(
+            name: 'predictions',
+            type: 'array',
+            itemType: 'number',
+            description: 'Fitted values',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -265,7 +337,9 @@ class RegressionFunction implements AnalysisFunction {
 
   List<double> _solve(List<List<double>> a, List<double> b) {
     final n = b.length;
-    final mtx = [for (var i = 0; i < n; i++) [...a[i], b[i]]];
+    final mtx = [
+      for (var i = 0; i < n; i++) [...a[i], b[i]]
+    ];
     for (var col = 0; col < n; col++) {
       var pivot = col;
       for (var r = col + 1; r < n; r++) {
@@ -300,8 +374,7 @@ class HypothesisTestFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'hypothesis_test',
-        description:
-            'Two-sample tests: Welch t-test, Kolmogorov–Smirnov',
+        description: 'Two-sample tests: Welch t-test, Kolmogorov–Smirnov',
         parameters: {
           'columns': AnalysisParameterSchema(
             name: 'columns',
@@ -313,6 +386,40 @@ class HypothesisTestFunction implements AnalysisFunction {
             type: 'string',
             defaultValue: 'ttest',
             description: 'ttest | ks',
+          ),
+        },
+        results: const {
+          'statistic': AnalysisResultSchema(
+            name: 'statistic',
+            type: 'number',
+            description: 'Test statistic',
+          ),
+          'columns': AnalysisResultSchema(
+            name: 'columns',
+            type: 'array',
+            itemType: 'string',
+            description: 'The two compared columns',
+          ),
+          'test': AnalysisResultSchema(
+            name: 'test',
+            type: 'string',
+            description: 'Test performed',
+          ),
+          'degreesOfFreedom': AnalysisResultSchema(
+            name: 'degreesOfFreedom',
+            type: 'number',
+            description: 'Degrees of freedom',
+          ),
+          'criticalValue': AnalysisResultSchema(
+            name: 'criticalValue',
+            type: 'number',
+            description: 'Critical value at the chosen level; present for '
+                'the ks test',
+          ),
+          'significant': AnalysisResultSchema(
+            name: 'significant',
+            type: 'boolean',
+            description: 'Whether the null hypothesis is rejected',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -347,11 +454,10 @@ class HypothesisTestFunction implements AnalysisFunction {
         } else {
           j++;
         }
-        d = math.max(
-            d, ((i / sa.length) - (j / sb.length)).abs());
+        d = math.max(d, ((i / sa.length) - (j / sb.length)).abs());
       }
-      final critical = 1.358 *
-          math.sqrt((sa.length + sb.length) / (sa.length * sb.length));
+      final critical =
+          1.358 * math.sqrt((sa.length + sb.length) / (sa.length * sb.length));
       results['statistic'] = d;
       results['criticalValue'] = critical;
       results['significant'] = d > critical;
@@ -411,6 +517,25 @@ class InterpolateFunction implements AnalysisFunction {
             name: 'queryPoints',
             type: 'array',
             description: 'x positions to evaluate (default: midpoints)',
+          ),
+        },
+        results: const {
+          'method': AnalysisResultSchema(
+            name: 'method',
+            type: 'string',
+            description: 'Interpolation method',
+          ),
+          'queryPoints': AnalysisResultSchema(
+            name: 'queryPoints',
+            type: 'array',
+            itemType: 'number',
+            description: 'Requested x positions',
+          ),
+          'values': AnalysisResultSchema(
+            name: 'values',
+            type: 'array',
+            itemType: 'number',
+            description: 'Interpolated values',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -483,7 +608,8 @@ class InterpolateFunction implements AnalysisFunction {
     final h = [for (var i = 0; i < n - 1; i++) xs[i + 1] - xs[i]];
     final alpha = List<double>.filled(n, 0.0);
     for (var i = 1; i < n - 1; i++) {
-      alpha[i] = 3 * ((ys[i + 1] - ys[i]) / h[i] - (ys[i] - ys[i - 1]) / h[i - 1]);
+      alpha[i] =
+          3 * ((ys[i + 1] - ys[i]) / h[i] - (ys[i] - ys[i - 1]) / h[i - 1]);
     }
     final l = List<double>.filled(n, 1.0);
     final mu = List<double>.filled(n, 0.0);

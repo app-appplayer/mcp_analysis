@@ -9,7 +9,8 @@ class AnomalyDetectFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'anomaly_detect',
-        description: 'Detect anomalies using threshold, z-score, IQR, or EWMA methods',
+        description:
+            'Detect anomalies using threshold, z-score, IQR, or EWMA methods',
         parameters: {
           'method': AnalysisParameterSchema(
             name: 'method',
@@ -37,8 +38,25 @@ class AnomalyDetectFunction implements AnalysisFunction {
             name: 'alpha',
             type: 'double',
             defaultValue: 0.3,
-            description:
-                'Smoothing factor for EWMA method (0 < alpha <= 1)',
+            description: 'Smoothing factor for EWMA method (0 < alpha <= 1)',
+          ),
+        },
+        results: const {
+          'anomalies': AnalysisResultSchema(
+            name: 'anomalies',
+            type: 'array',
+            itemType: 'object',
+            description: 'Rows flagged as anomalous',
+          ),
+          'count': AnalysisResultSchema(
+            name: 'count',
+            type: 'number',
+            description: 'Number of anomalies',
+          ),
+          'method': AnalysisResultSchema(
+            name: 'method',
+            type: 'string',
+            description: 'Detection method used',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -68,8 +86,8 @@ class AnomalyDetectFunction implements AnalysisFunction {
 
     final values = data.rows
         .map((r) => r[column])
-        .where((v) => v is num)
-        .map((v) => (v as num).toDouble())
+        .whereType<num>()
+        .map((v) => (v).toDouble())
         .toList();
 
     final anomalies = <Map<String, dynamic>>[];
@@ -131,9 +149,8 @@ class AnomalyDetectFunction implements AnalysisFunction {
             anomalies.add({
               'index': i,
               'value': values[i],
-              'score': values[i] > upper
-                  ? values[i] - upper
-                  : lower - values[i],
+              'score':
+                  values[i] > upper ? values[i] - upper : lower - values[i],
             });
           }
         }
@@ -149,8 +166,8 @@ class AnomalyDetectFunction implements AnalysisFunction {
             ? xs[xs.length ~/ 2]
             : (xs[xs.length ~/ 2 - 1] + xs[xs.length ~/ 2]) / 2;
         final median = medianOf(sortedForMedian);
-        final deviations =
-            values.map((v) => (v - median).abs()).toList()..sort();
+        final deviations = values.map((v) => (v - median).abs()).toList()
+          ..sort();
         final mad = medianOf(deviations);
         if (mad == 0) break;
 
@@ -166,8 +183,7 @@ class AnomalyDetectFunction implements AnalysisFunction {
         }
 
       case 'ewma':
-        final alpha =
-            (parameters['alpha'] as num?)?.toDouble() ?? 0.3;
+        final alpha = (parameters['alpha'] as num?)?.toDouble() ?? 0.3;
         final sensitivity =
             (parameters['sensitivity'] as num?)?.toDouble() ?? 2.0;
         if (values.isEmpty) break;

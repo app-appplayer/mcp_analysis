@@ -73,6 +73,29 @@ class DigitalFilterFunction implements AnalysisFunction {
             description: 'Apply forward–backward for zero phase shift',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'type': AnalysisResultSchema(
+            name: 'type',
+            type: 'string',
+            description: 'Filter type applied',
+          ),
+          'values': AnalysisResultSchema(
+            name: 'values',
+            type: 'array',
+            itemType: 'number',
+            description: 'Filtered signal',
+          ),
+          'sampleCount': AnalysisResultSchema(
+            name: 'sampleCount',
+            type: 'number',
+            description: 'Samples returned',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -106,8 +129,7 @@ class DigitalFilterFunction implements AnalysisFunction {
             'cutoff ($cutoff Hz) must be below Nyquist (${fs / 2} Hz)');
       }
       final q = (parameters['q'] as num?)?.toDouble() ?? 0.7071;
-      final order =
-          ((parameters['order'] as num?)?.toInt() ?? 2).clamp(2, 8);
+      final order = ((parameters['order'] as num?)?.toInt() ?? 2).clamp(2, 8);
       final sections = <_BiquadCoeffs>[];
       if ((type == 'lowpass' || type == 'highpass') && order > 2) {
         // Butterworth N-th order = cascaded 2nd-order sections whose Qs
@@ -185,7 +207,6 @@ class DigitalFilterFunction implements AnalysisFunction {
 
 /// Normalized RBJ audio-EQ-cookbook biquad coefficients.
 class _BiquadCoeffs {
-  final double b0, b1, b2, a1, a2;
   const _BiquadCoeffs(this.b0, this.b1, this.b2, this.a1, this.a2);
 
   factory _BiquadCoeffs.rbj(String type, double fs, double f0, double q) {
@@ -221,4 +242,5 @@ class _BiquadCoeffs {
     a2 = 1 - alpha;
     return _BiquadCoeffs(b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0);
   }
+  final double b0, b1, b2, a1, a2;
 }

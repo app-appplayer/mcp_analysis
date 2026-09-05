@@ -10,6 +10,8 @@
 /// Deterministic: fixed seeds, fixed base timestamp. Every scenario reports
 /// via [_report] in one aligned table; nothing asserts — this is a meter,
 /// not a test (NFR assertions are wired separately once targets are set).
+library;
+
 import 'dart:io';
 import 'dart:math';
 
@@ -130,21 +132,29 @@ Future<void> main() async {
   final stats = DescriptiveStatsFunction();
   for (final rows in [10000, 100000, 1000000]) {
     await _benchBatch('stats ${_fmt(rows)}', rows, (d) async {
-      await stats.execute({'columns': ['temperature']}, d);
+      await stats.execute({
+        'columns': ['temperature']
+      }, d);
     });
   }
 
   final anomaly = AnomalyDetectFunction();
   await _benchBatch('anomaly zscore 100K', 100000, (d) async {
     await anomaly.execute(
-      {'columns': ['temperature'], 'method': 'zscore', 'threshold': 3.0},
+      {
+        'columns': ['temperature'],
+        'method': 'zscore',
+        'threshold': 3.0
+      },
       d,
     );
   });
 
   final corr = CorrelationRegressionFunction();
   await _benchBatch('correlation 100K', 100000, (d) async {
-    await corr.execute({'columns': ['temperature', 'pressure']}, d);
+    await corr.execute({
+      'columns': ['temperature', 'pressure']
+    }, d);
   });
 
   final pipeline = TransformPipeline();

@@ -13,9 +13,8 @@ import '../helpers/test_data.dart';
 
 /// A slow data source adapter that delays for a specified duration.
 class SlowDataSourceAdapter implements DataSourceAdapter {
-  final Duration delay;
-
   SlowDataSourceAdapter({required this.delay});
+  final Duration delay;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;
@@ -32,9 +31,9 @@ class SlowDataSourceAdapter implements DataSourceAdapter {
 
   @override
   Future<AnalysisSourceSchema> getSourceMetadata(String query) async {
-    return AnalysisSourceSchema(
+    return const AnalysisSourceSchema(
       columns: [
-        const AnalysisColumnInfo(name: 'temperature', type: 'double'),
+        AnalysisColumnInfo(name: 'temperature', type: 'double'),
       ],
     );
   }
@@ -202,7 +201,8 @@ void main() {
   // ==========================================================================
   group('MetricPort Metrics', () {
     // TC-010: Verify all 4 required metrics are recorded
-    test('TC-010: job_duration_ms, throughput, failure_rate, alert_count recorded',
+    test(
+        'TC-010: job_duration_ms, throughput, failure_rate, alert_count recorded',
         () async {
       final specStorage = InMemoryStorage<AnalysisSpec>();
       final jobStorage = InMemoryStorage<AnalysisJob>();
@@ -288,13 +288,14 @@ void main() {
       // Execute analysis
       await engine.runAnalysis(
         specId: 'metric-test-spec',
-        parameters: {'columns': ['temperature']},
+        parameters: {
+          'columns': ['temperature']
+        },
         mode: AnalysisExecutionMode.batch,
       );
 
       // Verify all 4 metrics were recorded
-      final metricNames =
-          metricPort.recordedMetrics.map((m) => m.name).toSet();
+      final metricNames = metricPort.recordedMetrics.map((m) => m.name).toSet();
 
       expect(metricNames, contains('analysis.job_duration_ms'),
           reason: 'job_duration_ms metric must be recorded');
@@ -369,8 +370,8 @@ void main() {
       sw1m.stop();
 
       // Ratio should be <= 12 (linear scaling with overhead tolerance)
-      final ratio = sw1m.elapsedMicroseconds /
-          max(sw100k.elapsedMicroseconds, 1);
+      final ratio =
+          sw1m.elapsedMicroseconds / max(sw100k.elapsedMicroseconds, 1);
       expect(ratio, lessThanOrEqualTo(20),
           reason:
               'Scaling ratio $ratio exceeds threshold (100K: ${sw100k.elapsedMilliseconds}ms, 1M: ${sw1m.elapsedMilliseconds}ms)');
@@ -386,7 +387,10 @@ void main() {
         ),
         AnalysisTransform(
           name: 'sort',
-          parameters: {'columns': ['temperature'], 'ascending': true},
+          parameters: {
+            'columns': ['temperature'],
+            'ascending': true
+          },
         ),
       ];
 
@@ -400,11 +404,10 @@ void main() {
       await pipeline.execute(data1m, transforms);
       sw1m.stop();
 
-      final ratio = sw1m.elapsedMicroseconds /
-          max(sw100k.elapsedMicroseconds, 1);
+      final ratio =
+          sw1m.elapsedMicroseconds / max(sw100k.elapsedMicroseconds, 1);
       expect(ratio, lessThanOrEqualTo(20),
-          reason:
-              'Transform scaling ratio $ratio exceeds threshold');
+          reason: 'Transform scaling ratio $ratio exceeds threshold');
     });
 
     // TC-004: Function execution linear scaling
@@ -419,7 +422,9 @@ void main() {
       final sw100k = Stopwatch()..start();
       await dispatcher.executeFunction(
         functionName: 'descriptive_stats',
-        parameters: {'columns': ['temperature']},
+        parameters: {
+          'columns': ['temperature']
+        },
         data: data100k,
       );
       sw100k.stop();
@@ -428,13 +433,15 @@ void main() {
       final sw1m = Stopwatch()..start();
       await dispatcher.executeFunction(
         functionName: 'descriptive_stats',
-        parameters: {'columns': ['temperature']},
+        parameters: {
+          'columns': ['temperature']
+        },
         data: data1m,
       );
       sw1m.stop();
 
-      final ratio = sw1m.elapsedMicroseconds /
-          max(sw100k.elapsedMicroseconds, 1);
+      final ratio =
+          sw1m.elapsedMicroseconds / max(sw100k.elapsedMicroseconds, 1);
       expect(ratio, lessThanOrEqualTo(20),
           reason: 'Function scaling ratio $ratio exceeds threshold');
     });
@@ -498,9 +505,9 @@ void main() {
     // TC-008: Large dataset processed in chunks without OOM
     test('TC-008: chunked processing handles large datasets', () async {
       final pipeline = TransformPipeline();
-      final chunkSize = 100000;
-      final totalRows = 1000000;
-      final chunks = totalRows ~/ chunkSize;
+      const chunkSize = 100000;
+      const totalRows = 1000000;
+      const chunks = totalRows ~/ chunkSize;
       var processedChunks = 0;
 
       for (var i = 0; i < chunks; i++) {
@@ -508,7 +515,11 @@ void main() {
         await pipeline.execute(chunk, [
           AnalysisTransform(
             name: 'filter',
-            parameters: {'column': 'temperature', 'operator': '>', 'value': 0.0},
+            parameters: {
+              'column': 'temperature',
+              'operator': '>',
+              'value': 0.0
+            },
           ),
         ]);
         processedChunks++;
@@ -520,7 +531,7 @@ void main() {
     // TC-009: Chunk size is configurable
     test('TC-009: different chunk sizes produce same result count', () async {
       final pipeline = TransformPipeline();
-      final totalRows = 100000;
+      const totalRows = 100000;
       final transforms = [
         AnalysisTransform(
           name: 'filter',

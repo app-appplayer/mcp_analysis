@@ -10,6 +10,7 @@ import 'package:test/test.dart';
 
 /// Simple mock adapter that returns pre-configured data.
 class MockDataSourceAdapter implements DataSourceAdapter {
+  MockDataSourceAdapter(this.data, {this.available = true});
   final AnalysisDataSet data;
   bool available;
 
@@ -17,8 +18,6 @@ class MockDataSourceAdapter implements DataSourceAdapter {
   String? lastQuery;
   Map<String, dynamic>? lastFilter;
   AnalysisTimeRange? lastTimeRange;
-
-  MockDataSourceAdapter(this.data, {this.available = true});
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;
@@ -54,10 +53,9 @@ class MockDataSourceAdapter implements DataSourceAdapter {
 /// Mock adapter that supports streaming via StreamableDataSource mixin.
 class MockStreamableAdapter extends MockDataSourceAdapter
     with StreamableDataSource {
+  MockStreamableAdapter(super.data);
   final StreamController<AnalysisDataSet> _controller =
       StreamController.broadcast();
-
-  MockStreamableAdapter(super.data);
 
   @override
   Stream<AnalysisDataSet> subscribe({
@@ -75,13 +73,12 @@ class MockStreamableAdapter extends MockDataSourceAdapter
 
 /// Mock adapter that always throws on queryData.
 class ErrorThrowingAdapter implements DataSourceAdapter {
-  final String errorCode;
-  final String errorMessage;
-
   ErrorThrowingAdapter({
     this.errorCode = 'adapter.error',
     this.errorMessage = 'Adapter internal error',
   });
+  final String errorCode;
+  final String errorMessage;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.factgraph;
@@ -385,18 +382,15 @@ void main() {
       final result = await adapter.queryData(query: _csvData);
 
       // date column parsed as DateTime => type inferred from first row
-      final dateCol =
-          result.columns.firstWhere((c) => c.name == 'date');
+      final dateCol = result.columns.firstWhere((c) => c.name == 'date');
       expect(dateCol.type, equals('datetime'));
 
       // temperature column should be inferred as double
-      final tempCol =
-          result.columns.firstWhere((c) => c.name == 'temperature');
+      final tempCol = result.columns.firstWhere((c) => c.name == 'temperature');
       expect(tempCol.type, equals('double'));
 
       // status column should remain string
-      final statusCol =
-          result.columns.firstWhere((c) => c.name == 'status');
+      final statusCol = result.columns.firstWhere((c) => c.name == 'status');
       expect(statusCol.type, equals('string'));
     });
 
@@ -586,12 +580,10 @@ void main() {
     test('TC-015: JSON column type inference from first row', () async {
       final result = await adapter.queryData(query: _jsonData);
 
-      final nameCol =
-          result.columns.firstWhere((c) => c.name == 'name');
+      final nameCol = result.columns.firstWhere((c) => c.name == 'name');
       expect(nameCol.type, equals('string'));
 
-      final valueCol =
-          result.columns.firstWhere((c) => c.name == 'value');
+      final valueCol = result.columns.firstWhere((c) => c.name == 'value');
       expect(valueCol.type, equals('int'));
     });
   });
@@ -660,8 +652,7 @@ void main() {
 
       registry.unregister(AnalysisSourceType.factgraph);
 
-      expect(
-          await registry.isAvailable(AnalysisSourceType.factgraph), isFalse);
+      expect(await registry.isAvailable(AnalysisSourceType.factgraph), isFalse);
     });
 
     // TC-012: Unregistered source query throws after unregister
@@ -1219,7 +1210,8 @@ void main() {
     });
 
     // TC-050: queryData with invalid query JSON throws schema_mismatch
-    test('TC-050: queryData with invalid query JSON throws source.schema_mismatch',
+    test(
+        'TC-050: queryData with invalid query JSON throws source.schema_mismatch',
         () async {
       expect(
         () => adapter.queryData(query: 'not-json'),
@@ -1235,7 +1227,7 @@ void main() {
 
     // TC-051: getSourceMetadata returns empty schema when no mapping
     test('TC-051: getSourceMetadata returns empty column schema', () async {
-      final query = '{"url":"https://api.example.com/data"}';
+      const query = '{"url":"https://api.example.com/data"}';
       final schema = await adapter.getSourceMetadata(query);
 
       expect(schema.columns, isEmpty);
@@ -1251,7 +1243,7 @@ void main() {
     test('TC-053: timeout produces source.timeout', () async {
       httpClient.errorToThrow = TimeoutException('timed out');
 
-      final query = '{"url":"https://api.example.com/data"}';
+      const query = '{"url":"https://api.example.com/data"}';
       expect(
         () => adapter.queryData(query: query),
         throwsA(
@@ -1266,12 +1258,12 @@ void main() {
 
     // TC-054: 401 status produces source.unauthorized
     test('TC-054: 401 produces source.unauthorized', () async {
-      httpClient.response = HttpResponseData(
+      httpClient.response = const HttpResponseData(
         statusCode: 401,
         body: '{"error":"Unauthorized"}',
       );
 
-      final query = '{"url":"https://api.example.com/data"}';
+      const query = '{"url":"https://api.example.com/data"}';
       expect(
         () => adapter.queryData(query: query),
         throwsA(
@@ -1288,7 +1280,7 @@ void main() {
     test('TC-055: connection failure throws source.unavailable', () async {
       httpClient.errorToThrow = Exception('Connection refused');
 
-      final query = '{"url":"https://api.example.com/data"}';
+      const query = '{"url":"https://api.example.com/data"}';
       expect(
         () => adapter.queryData(query: query),
         throwsA(
@@ -1343,7 +1335,8 @@ void main() {
     });
 
     // getSourceMetadata for JSON content uses _parseJson path
-    test('getSourceMetadata with JSON content returns correct schema', () async {
+    test('getSourceMetadata with JSON content returns correct schema',
+        () async {
       adapter.setContent('[{"x":1,"y":"hello"}]', format: 'json');
 
       final schema = await adapter.getSourceMetadata('ignored');
@@ -1398,11 +1391,11 @@ void main() {
       expect(result.rows[0]['name'], equals('A'));
       // Nested object parsed as map
       final meta = result.rows[0]['meta'];
-      expect(meta, isA<Map>());
-      expect(meta['score'], equals(10));
+      expect(meta, isA<Map<dynamic, dynamic>>());
+      expect((meta as Map<dynamic, dynamic>)['score'], equals(10));
       // Array parsed as list
       final tags = result.rows[0]['tags'];
-      expect(tags, isA<List>());
+      expect(tags, isA<List<dynamic>>());
       expect(tags, containsAll([1, 2]));
     });
 
@@ -1426,7 +1419,8 @@ void main() {
     });
 
     // _inferType for bool type in CSV (first row has bool)
-    test('CSV column type inferred as bool when first row is boolean', () async {
+    test('CSV column type inferred as bool when first row is boolean',
+        () async {
       const csv = 'flag,count\ntrue,10\nfalse,20';
 
       final result = await adapter.queryData(query: csv);

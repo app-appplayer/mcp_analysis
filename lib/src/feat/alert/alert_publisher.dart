@@ -2,14 +2,6 @@ import 'package:mcp_bundle/ports.dart';
 
 /// Evaluation result for an alert condition.
 class AlertEvaluation {
-  final String ruleId;
-  final bool triggered;
-  final AnalysisAlertSeverity severity;
-  final String condition;
-  final dynamic currentValue;
-  final DateTime timestamp;
-  final String? message;
-
   const AlertEvaluation({
     required this.ruleId,
     required this.triggered,
@@ -19,6 +11,13 @@ class AlertEvaluation {
     required this.timestamp,
     this.message,
   });
+  final String ruleId;
+  final bool triggered;
+  final AnalysisAlertSeverity severity;
+  final String condition;
+  final dynamic currentValue;
+  final DateTime timestamp;
+  final String? message;
 }
 
 /// Minimal interface for form report generation triggered by alert actionHooks.
@@ -35,14 +34,13 @@ abstract class AlertFormPort {
 
 /// Publishes alert events through EventPort.
 class AlertPublisher {
-  final EventPort _eventPort;
-  final AlertFormPort? _formPort;
-
   AlertPublisher({
     required EventPort eventPort,
     AlertFormPort? formPort,
   })  : _eventPort = eventPort,
         _formPort = formPort;
+  final EventPort _eventPort;
+  final AlertFormPort? _formPort;
 
   /// Publish an alert event and execute any actionHook.
   /// Throws [AnalysisError] with code `alert.publish_failed` if

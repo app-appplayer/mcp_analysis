@@ -42,11 +42,10 @@ void main() {
   group('psd_welch', () {
     test('band powers separate two sines into their bands', () async {
       const fs = 256.0;
-      final n = 2048;
+      const n = 2048;
       final s1 = _sine(10, fs, n, amp: 2.0);
       final s2 = _sine(40, fs, n, amp: 1.0);
-      final data =
-          _signal([for (var i = 0; i < n; i++) s1[i] + s2[i]]);
+      final data = _signal([for (var i = 0; i < n; i++) s1[i] + s2[i]]);
       final r = await PsdWelchFunction().execute({
         'sampleRate': fs,
         'segmentLength': 256,
@@ -76,23 +75,18 @@ void main() {
       }
 
       final passed = await f.execute(
-          {'type': 'lowpass', 'sampleRate': fs, 'cutoff': 50.0},
-          _signal(low));
+          {'type': 'lowpass', 'sampleRate': fs, 'cutoff': 50.0}, _signal(low));
       final blocked = await f.execute(
-          {'type': 'lowpass', 'sampleRate': fs, 'cutoff': 50.0},
-          _signal(high));
-      expect(
-          tailAmplitude((passed.results['values'] as List).cast<double>()),
+          {'type': 'lowpass', 'sampleRate': fs, 'cutoff': 50.0}, _signal(high));
+      expect(tailAmplitude((passed.results['values'] as List).cast<double>()),
           closeTo(1.0, 0.1));
-      expect(
-          tailAmplitude((blocked.results['values'] as List).cast<double>()),
+      expect(tailAmplitude((blocked.results['values'] as List).cast<double>()),
           lessThan(0.15));
     });
 
     test('moving_average smooths a constant to itself', () async {
       final r = await DigitalFilterFunction().execute(
-          {'type': 'moving_average', 'taps': 4},
-          _signal(List.filled(32, 7.0)));
+          {'type': 'moving_average', 'taps': 4}, _signal(List.filled(32, 7.0)));
       final out = (r.results['values'] as List).cast<double>();
       expect(out.last, closeTo(7.0, 1e-12));
     });
@@ -148,8 +142,7 @@ void main() {
 
   group('envelope', () {
     test('RMS envelope of a sine settles near A/√2', () async {
-      final r = await EnvelopeFunction().execute(
-          {'mode': 'rms', 'window': 100},
+      final r = await EnvelopeFunction().execute({'mode': 'rms', 'window': 100},
           _signal(_sine(50, 1000, 1000, amp: 2.0)));
       final out = (r.results['values'] as List).cast<double>();
       expect(out.last, closeTo(2.0 / math.sqrt2, 0.05));

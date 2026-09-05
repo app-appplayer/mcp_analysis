@@ -12,15 +12,6 @@ import 'stream_executor.dart';
 /// Central orchestrator for analysis execution.
 /// Dispatches to mode-specific executors after governance checks.
 class ExecutionEngine implements ExecutionOperations {
-  final SpecManager _specManager;
-  final JobManager _jobManager;
-  final BatchExecutor _batchExecutor;
-  final AdhocExecutor _adhocExecutor;
-  final StreamExecutor _streamExecutor;
-  final RbacPolicy _rbac;
-  final AuditLogger _auditLogger;
-  final MetricPort _metricPort;
-
   ExecutionEngine({
     required SpecManager specManager,
     required JobManager jobManager,
@@ -38,6 +29,14 @@ class ExecutionEngine implements ExecutionOperations {
         _rbac = rbac,
         _auditLogger = auditLogger,
         _metricPort = metricPort;
+  final SpecManager _specManager;
+  final JobManager _jobManager;
+  final BatchExecutor _batchExecutor;
+  final AdhocExecutor _adhocExecutor;
+  final StreamExecutor _streamExecutor;
+  final RbacPolicy _rbac;
+  final AuditLogger _auditLogger;
+  final MetricPort _metricPort;
 
   /// Execute an analysis. Main entry point.
   /// 1. Resolve Spec + parameters
@@ -45,6 +44,7 @@ class ExecutionEngine implements ExecutionOperations {
   /// 3. Create Job
   /// 4. Dispatch to mode-specific executor
   /// 5. Record audit log + operational metrics
+  @override
   Future<AnalysisJob> runAnalysis({
     required String specId,
     required Map<String, dynamic> parameters,
@@ -157,12 +157,15 @@ class ExecutionEngine implements ExecutionOperations {
   }
 
   /// Get Job status and results.
+  @override
   Future<AnalysisJob?> getJob(String jobId) async {
     return _jobManager.getJob(jobId);
   }
 
   /// Cancel a running Job.
-  Future<AnalysisJob> cancelJob(String jobId, {RbacContext? rbacContext}) async {
+  @override
+  Future<AnalysisJob> cancelJob(String jobId,
+      {RbacContext? rbacContext}) async {
     if (rbacContext != null) {
       final job = await _jobManager.getJob(jobId);
       if (job == null) {
@@ -173,10 +176,8 @@ class ExecutionEngine implements ExecutionOperations {
       }
 
       // Check cancel permission
-      final isSameActor =
-          job.parameters['_actorId'] == rbacContext.actorId;
-      final operation =
-          isSameActor ? 'cancel_own_job' : 'cancel_any_job';
+      final isSameActor = job.parameters['_actorId'] == rbacContext.actorId;
+      final operation = isSameActor ? 'cancel_own_job' : 'cancel_any_job';
       await _rbac.checkPermission(
         context: rbacContext,
         operation: operation,
@@ -226,9 +227,8 @@ class ExecutionEngine implements ExecutionOperations {
 
       // Record throughput (artifacts produced per second)
       final artifactCount = completedJob?.artifactIds.length ?? 0;
-      final throughput = durationMs > 0
-          ? (artifactCount / (durationMs / 1000.0))
-          : 0.0;
+      final throughput =
+          durationMs > 0 ? (artifactCount / (durationMs / 1000.0)) : 0.0;
       await _metricPort.record(
         'analysis.throughput',
         throughput,

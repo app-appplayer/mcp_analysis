@@ -11,6 +11,7 @@ import 'package:test/test.dart';
 
 /// Mock HttpClientPort that returns pre-configured responses.
 class MockHttpClient implements HttpClientPort {
+  MockHttpClient({this.response});
   HttpResponseData? response;
   Object? errorToThrow;
 
@@ -20,8 +21,6 @@ class MockHttpClient implements HttpClientPort {
   Map<String, String>? lastHeaders;
   String? lastBody;
   Duration? lastTimeout;
-
-  MockHttpClient({this.response});
 
   @override
   Future<HttpResponseData> request({
@@ -160,7 +159,7 @@ void main() {
 
     // TC-003: 401 status code throws source.unauthorized
     test('TC-003: 401 status code throws source.unauthorized', () async {
-      httpClient.response = HttpResponseData(
+      httpClient.response = const HttpResponseData(
         statusCode: 401,
         body: '{"error":"Unauthorized"}',
       );
@@ -178,7 +177,7 @@ void main() {
 
     // TC-004: 403 status code throws source.unauthorized
     test('TC-004: 403 status code throws source.unauthorized', () async {
-      httpClient.response = HttpResponseData(
+      httpClient.response = const HttpResponseData(
         statusCode: 403,
         body: '{"error":"Forbidden"}',
       );
@@ -230,7 +229,7 @@ void main() {
     // TC-007: Invalid JSON response throws source.schema_mismatch
     test('TC-007: invalid JSON response throws source.schema_mismatch',
         () async {
-      httpClient.response = HttpResponseData(
+      httpClient.response = const HttpResponseData(
         statusCode: 200,
         body: 'not valid json {{',
       );
@@ -252,7 +251,9 @@ void main() {
         () async {
       httpClient.response = HttpResponseData(
         statusCode: 200,
-        body: json.encode({'data': [1, 2, 3]}),
+        body: json.encode({
+          'data': [1, 2, 3]
+        }),
       );
 
       // No dataArrayPath specified, but response is an object not array
@@ -283,7 +284,7 @@ void main() {
 
     // TC-010: 500 status code throws source.unavailable
     test('TC-010: 500 status code throws source.unavailable', () async {
-      httpClient.response = HttpResponseData(
+      httpClient.response = const HttpResponseData(
         statusCode: 500,
         body: '{"error":"Internal Server Error"}',
       );
@@ -374,8 +375,8 @@ void main() {
       await adapter.queryData(query: query);
 
       expect(httpClient.lastHeaders, isNotNull);
-      expect(httpClient.lastHeaders!['Authorization'],
-          equals('Bearer token123'));
+      expect(
+          httpClient.lastHeaders!['Authorization'], equals('Bearer token123'));
       expect(httpClient.lastHeaders!['X-Custom'], equals('value'));
     });
 
@@ -383,7 +384,7 @@ void main() {
     test('TC-016: empty data array returns empty dataset', () async {
       httpClient.response = HttpResponseData(
         statusCode: 200,
-        body: json.encode({'data': []}),
+        body: json.encode({'data': <dynamic>[]}),
       );
 
       final query = _buildQuery(
@@ -410,7 +411,7 @@ void main() {
         () async {
       httpClient.response = HttpResponseData(
         statusCode: 200,
-        body: json.encode({'other': []}),
+        body: json.encode({'other': <dynamic>[]}),
       );
 
       final query = _buildQuery(

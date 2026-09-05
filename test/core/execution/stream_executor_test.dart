@@ -73,18 +73,6 @@ class FakeStreamableAdapter extends DataSourceAdapter
 // ============================================================================
 
 class _StreamTestFixture {
-  final InMemoryStorage<AnalysisJob> jobStorage;
-  final InMemoryStorage<AnalysisArtifact> artifactStorage;
-  final JobManager jobManager;
-  final DataSourceRegistry dataSourceRegistry;
-  final TransformPipeline transformPipeline;
-  final ArtifactBuilder artifactBuilder;
-  final ArtifactStore artifactStore;
-  final ProvenanceTracker provenanceTracker;
-  final AlertEvaluator alertEvaluator;
-  final MockEventPort eventPort;
-  final StreamExecutor executor;
-
   _StreamTestFixture._({
     required this.jobStorage,
     required this.artifactStorage,
@@ -137,6 +125,17 @@ class _StreamTestFixture {
       executor: executor,
     );
   }
+  final InMemoryStorage<AnalysisJob> jobStorage;
+  final InMemoryStorage<AnalysisArtifact> artifactStorage;
+  final JobManager jobManager;
+  final DataSourceRegistry dataSourceRegistry;
+  final TransformPipeline transformPipeline;
+  final ArtifactBuilder artifactBuilder;
+  final ArtifactStore artifactStore;
+  final ProvenanceTracker provenanceTracker;
+  final AlertEvaluator alertEvaluator;
+  final MockEventPort eventPort;
+  final StreamExecutor executor;
 
   /// Create a job in running state.
   Future<AnalysisJob> createRunningJob({
@@ -491,7 +490,8 @@ void main() {
     });
 
     // TC-010: No analysis function execution in streaming
-    test('TC-010: streaming mode does not execute analysis functions', () async {
+    test('TC-010: streaming mode does not execute analysis functions',
+        () async {
       final spec = _createStreamSpec();
       final job = await f.createRunningJob();
 

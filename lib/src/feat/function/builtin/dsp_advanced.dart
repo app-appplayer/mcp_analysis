@@ -47,6 +47,38 @@ class SpectrogramFunction implements AnalysisFunction {
             description: 'Window function: hann, hamming, rect',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'times': AnalysisResultSchema(
+            name: 'times',
+            type: 'array',
+            itemType: 'number',
+            unit: 's',
+            description: 'Segment centre times',
+          ),
+          'frequencies': AnalysisResultSchema(
+            name: 'frequencies',
+            type: 'array',
+            itemType: 'number',
+            unit: 'Hz',
+            description: 'Frequency bins',
+          ),
+          'magnitudes': AnalysisResultSchema(
+            name: 'magnitudes',
+            type: 'array',
+            itemType: 'object',
+            description: 'Magnitude rows, one per segment',
+          ),
+          'segmentCount': AnalysisResultSchema(
+            name: 'segmentCount',
+            type: 'number',
+            description: 'Number of segments',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -71,8 +103,8 @@ class SpectrogramFunction implements AnalysisFunction {
     final overlap =
         ((parameters['overlap'] as num?)?.toDouble() ?? 0.5).clamp(0.0, 0.9);
     final hop = math.max(1, (segLen * (1 - overlap)).round());
-    final w = windowCoefficients(
-        parameters['window'] as String? ?? 'hann', segLen);
+    final w =
+        windowCoefficients(parameters['window'] as String? ?? 'hann', segLen);
     final gain = w.reduce((a, b) => a + b) / segLen;
 
     final half = segLen ~/ 2;
@@ -94,8 +126,7 @@ class SpectrogramFunction implements AnalysisFunction {
       results: {
         'column': column,
         'times': times,
-        'frequencies':
-            List<double>.generate(half, (i) => i * fs / segLen),
+        'frequencies': List<double>.generate(half, (i) => i * fs / segLen),
         'magnitudes': mags,
         'segmentCount': times.length,
       },
@@ -113,8 +144,7 @@ class CepstrumFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'cepstrum',
-        description:
-            'Real cepstrum — repetition-period / echo detection',
+        description: 'Real cepstrum — repetition-period / echo detection',
         parameters: {
           'column': AnalysisParameterSchema(
             name: 'column',
@@ -125,6 +155,32 @@ class CepstrumFunction implements AnalysisFunction {
             name: 'sampleRate',
             type: 'number',
             description: 'Sampling rate in Hz (required)',
+          ),
+        },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'quefrencies': AnalysisResultSchema(
+            name: 'quefrencies',
+            type: 'array',
+            itemType: 'number',
+            unit: 's',
+            description: 'Quefrency axis',
+          ),
+          'cepstrum': AnalysisResultSchema(
+            name: 'cepstrum',
+            type: 'array',
+            itemType: 'number',
+            description: 'Real cepstrum',
+          ),
+          'peakQuefrency': AnalysisResultSchema(
+            name: 'peakQuefrency',
+            type: 'number',
+            unit: 's',
+            description: 'Quefrency of the largest peak',
           ),
         },
         supportedDataTypes: ['double', 'int'],
@@ -200,8 +256,7 @@ class HarmonicsFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'harmonics',
-        description:
-            'Fundamental/harmonic amplitudes + THD (total harmonic '
+        description: 'Fundamental/harmonic amplitudes + THD (total harmonic '
             'distortion)',
         parameters: {
           'column': AnalysisParameterSchema(
@@ -226,6 +281,36 @@ class HarmonicsFunction implements AnalysisFunction {
             description: 'Number of harmonics to report',
           ),
         },
+        results: const {
+          'column': AnalysisResultSchema(
+            name: 'column',
+            type: 'string',
+            description: 'Analyzed column',
+          ),
+          'fundamental': AnalysisResultSchema(
+            name: 'fundamental',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Fundamental frequency',
+          ),
+          'harmonics': AnalysisResultSchema(
+            name: 'harmonics',
+            type: 'array',
+            itemType: 'object',
+            description: 'Order, frequency and amplitude per harmonic',
+          ),
+          'thd': AnalysisResultSchema(
+            name: 'thd',
+            type: 'number',
+            description: 'Total harmonic distortion, ratio',
+          ),
+          'thdPercent': AnalysisResultSchema(
+            name: 'thdPercent',
+            type: 'number',
+            unit: '%',
+            description: 'Total harmonic distortion',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -242,7 +327,8 @@ class HarmonicsFunction implements AnalysisFunction {
     }
     final x = numericColumn(data, column);
     if (x.length < 16) throw ArgumentError('harmonics requires ≥ 16 samples');
-    final count = math.max(1, (parameters['harmonicCount'] as num?)?.toInt() ?? 10);
+    final count =
+        math.max(1, (parameters['harmonicCount'] as num?)?.toInt() ?? 10);
 
     final n = nextPow2(x.length);
     final re = List<double>.filled(n, 0.0);
@@ -323,8 +409,7 @@ class CrossPsdFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'cross_psd',
-        description:
-            'Cross-PSD, coherence and H1 FRF between two channels',
+        description: 'Cross-PSD, coherence and H1 FRF between two channels',
         parameters: {
           'columns': AnalysisParameterSchema(
             name: 'columns',
@@ -355,6 +440,51 @@ class CrossPsdFunction implements AnalysisFunction {
             description: 'Window function',
           ),
         },
+        results: const {
+          'columns': AnalysisResultSchema(
+            name: 'columns',
+            type: 'array',
+            itemType: 'string',
+            description: 'The two analyzed columns',
+          ),
+          'frequencies': AnalysisResultSchema(
+            name: 'frequencies',
+            type: 'array',
+            itemType: 'number',
+            unit: 'Hz',
+            description: 'Frequency bins',
+          ),
+          'coherence': AnalysisResultSchema(
+            name: 'coherence',
+            type: 'array',
+            itemType: 'number',
+            description: 'Magnitude-squared coherence',
+          ),
+          'frfMagnitude': AnalysisResultSchema(
+            name: 'frfMagnitude',
+            type: 'array',
+            itemType: 'number',
+            description: 'Frequency response magnitude',
+          ),
+          'frfPhase': AnalysisResultSchema(
+            name: 'frfPhase',
+            type: 'array',
+            itemType: 'number',
+            unit: 'rad',
+            description: 'Frequency response phase',
+          ),
+          'peakCoherentFrequency': AnalysisResultSchema(
+            name: 'peakCoherentFrequency',
+            type: 'number',
+            unit: 'Hz',
+            description: 'Frequency of highest coherence',
+          ),
+          'segments': AnalysisResultSchema(
+            name: 'segments',
+            type: 'number',
+            description: 'Welch segment count',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -383,8 +513,8 @@ class CrossPsdFunction implements AnalysisFunction {
     final overlap =
         ((parameters['overlap'] as num?)?.toDouble() ?? 0.5).clamp(0.0, 0.9);
     final hop = math.max(1, (segLen * (1 - overlap)).round());
-    final w = windowCoefficients(
-        parameters['window'] as String? ?? 'hann', segLen);
+    final w =
+        windowCoefficients(parameters['window'] as String? ?? 'hann', segLen);
 
     final half = segLen ~/ 2;
     final saa = List<double>.filled(half, 0.0);
@@ -429,8 +559,7 @@ class CrossPsdFunction implements AnalysisFunction {
       functionName: 'cross_psd',
       results: {
         'columns': cols,
-        'frequencies':
-            List<double>.generate(half, (i) => i * fs / segLen),
+        'frequencies': List<double>.generate(half, (i) => i * fs / segLen),
         'coherence': coherence,
         'frfMagnitude': frfMag,
         'frfPhase': frfPhase,

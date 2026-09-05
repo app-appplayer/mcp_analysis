@@ -25,11 +25,14 @@ AnalysisSpec _createSpec({
     analysisSteps: [
       AnalysisStep(
         function: 'descriptive_stats',
-        parameters: {'columns': ['temperature']},
+        parameters: {
+          'columns': ['temperature']
+        },
       ),
     ],
     outputs: [
       AnalysisOutputDef(
+        from: 'descriptive_stats',
         type: AnalysisArtifactType.metric,
         name: 'temperature_stats',
       ),
@@ -49,28 +52,17 @@ AnalysisSpec _createSpec({
 /// Extends the real BatchExecutor so the type system accepts it,
 /// but overrides execute to bypass all real pipeline logic.
 class FakeBatchExecutor extends BatchExecutor {
-  final JobManager _testJobManager;
-
   FakeBatchExecutor({
-    required JobManager jobManager,
-    required DataSourceRegistry dataSourceRegistry,
-    required TransformPipeline transformPipeline,
-    required FunctionDispatcher functionDispatcher,
-    required ArtifactBuilder artifactBuilder,
-    required ArtifactStore artifactStore,
-    required ProvenanceTracker provenanceTracker,
-    required AlertEvaluator alertEvaluator,
-  })  : _testJobManager = jobManager,
-        super(
-          jobManager: jobManager,
-          dataSourceRegistry: dataSourceRegistry,
-          transformPipeline: transformPipeline,
-          functionDispatcher: functionDispatcher,
-          artifactBuilder: artifactBuilder,
-          artifactStore: artifactStore,
-          provenanceTracker: provenanceTracker,
-          alertEvaluator: alertEvaluator,
-        );
+    required super.jobManager,
+    required super.dataSourceRegistry,
+    required super.transformPipeline,
+    required super.functionDispatcher,
+    required super.artifactBuilder,
+    required super.artifactStore,
+    required super.provenanceTracker,
+    required super.alertEvaluator,
+  }) : _testJobManager = jobManager;
+  final JobManager _testJobManager;
 
   @override
   Future<AnalysisJob> execute({
@@ -92,28 +84,17 @@ class FakeBatchExecutor extends BatchExecutor {
 
 /// A fake AdhocExecutor that immediately completes jobs.
 class FakeAdhocExecutor extends AdhocExecutor {
-  final JobManager _testJobManager;
-
   FakeAdhocExecutor({
-    required JobManager jobManager,
-    required DataSourceRegistry dataSourceRegistry,
-    required TransformPipeline transformPipeline,
-    required FunctionDispatcher functionDispatcher,
-    required ArtifactBuilder artifactBuilder,
-    required ArtifactStore artifactStore,
-    required ProvenanceTracker provenanceTracker,
-    required AlertEvaluator alertEvaluator,
-  })  : _testJobManager = jobManager,
-        super(
-          jobManager: jobManager,
-          dataSourceRegistry: dataSourceRegistry,
-          transformPipeline: transformPipeline,
-          functionDispatcher: functionDispatcher,
-          artifactBuilder: artifactBuilder,
-          artifactStore: artifactStore,
-          provenanceTracker: provenanceTracker,
-          alertEvaluator: alertEvaluator,
-        );
+    required super.jobManager,
+    required super.dataSourceRegistry,
+    required super.transformPipeline,
+    required super.functionDispatcher,
+    required super.artifactBuilder,
+    required super.artifactStore,
+    required super.provenanceTracker,
+    required super.alertEvaluator,
+  }) : _testJobManager = jobManager;
+  final JobManager _testJobManager;
 
   @override
   Future<AnalysisJob> execute({
@@ -135,26 +116,16 @@ class FakeAdhocExecutor extends AdhocExecutor {
 
 /// A fake StreamExecutor that immediately completes jobs.
 class FakeStreamExecutor extends StreamExecutor {
-  final JobManager _testJobManager;
-
   FakeStreamExecutor({
-    required JobManager jobManager,
-    required DataSourceRegistry dataSourceRegistry,
-    required TransformPipeline transformPipeline,
-    required ArtifactBuilder artifactBuilder,
-    required ArtifactStore artifactStore,
-    required ProvenanceTracker provenanceTracker,
-    required AlertEvaluator alertEvaluator,
-  })  : _testJobManager = jobManager,
-        super(
-          jobManager: jobManager,
-          dataSourceRegistry: dataSourceRegistry,
-          transformPipeline: transformPipeline,
-          artifactBuilder: artifactBuilder,
-          artifactStore: artifactStore,
-          provenanceTracker: provenanceTracker,
-          alertEvaluator: alertEvaluator,
-        );
+    required super.jobManager,
+    required super.dataSourceRegistry,
+    required super.transformPipeline,
+    required super.artifactBuilder,
+    required super.artifactStore,
+    required super.provenanceTracker,
+    required super.alertEvaluator,
+  }) : _testJobManager = jobManager;
+  final JobManager _testJobManager;
 
   @override
   Future<AnalysisJob> execute({
@@ -176,19 +147,6 @@ class FakeStreamExecutor extends StreamExecutor {
 
 /// Holds all dependencies needed for ExecutionEngine tests.
 class _TestFixture {
-  final InMemoryStorage<AnalysisSpec> specStorage;
-  final InMemoryStorage<AnalysisJob> jobStorage;
-  final InMemoryStorage<AuditRecord> auditStorage;
-  final SpecManager specManager;
-  final JobManager jobManager;
-  final RbacPolicy rbac;
-  final AuditLogger auditLogger;
-  final MockMetricPort metricPort;
-  final FakeBatchExecutor batchExecutor;
-  final FakeAdhocExecutor adhocExecutor;
-  final FakeStreamExecutor streamExecutor;
-  final ExecutionEngine engine;
-
   _TestFixture._({
     required this.specStorage,
     required this.jobStorage,
@@ -293,6 +251,18 @@ class _TestFixture {
       engine: engine,
     );
   }
+  final InMemoryStorage<AnalysisSpec> specStorage;
+  final InMemoryStorage<AnalysisJob> jobStorage;
+  final InMemoryStorage<AuditRecord> auditStorage;
+  final SpecManager specManager;
+  final JobManager jobManager;
+  final RbacPolicy rbac;
+  final AuditLogger auditLogger;
+  final MockMetricPort metricPort;
+  final FakeBatchExecutor batchExecutor;
+  final FakeAdhocExecutor adhocExecutor;
+  final FakeStreamExecutor streamExecutor;
+  final ExecutionEngine engine;
 }
 
 // ============================================================================
@@ -351,10 +321,6 @@ class _GenericFailingBatchExecutor extends BatchExecutor {
 
 /// Test fixture that uses a failing batch executor.
 class _FailingExecutorFixture {
-  final SpecManager specManager;
-  final JobManager jobManager;
-  final ExecutionEngine engine;
-
   _FailingExecutorFixture._({
     required this.specManager,
     required this.jobManager,
@@ -438,6 +404,9 @@ class _FailingExecutorFixture {
       engine: engine,
     );
   }
+  final SpecManager specManager;
+  final JobManager jobManager;
+  final ExecutionEngine engine;
 }
 
 // ============================================================================
@@ -496,7 +465,7 @@ void main() {
       // Use a role that does not have 'execute' permission.
       // RbacPolicy only defines operator, engineer, admin roles.
       // An unknown role will have no permissions.
-      final deniedContext = RbacContext(
+      const deniedContext = RbacContext(
         actorId: 'hacker',
         role: 'viewer',
       );
@@ -568,7 +537,7 @@ void main() {
       await f.jobManager.startJob(created.jobId);
 
       // Operator can cancel their own job (cancel_own_job permission)
-      final operatorContext = RbacContext(
+      const operatorContext = RbacContext(
         actorId: 'operator-1',
         role: 'operator',
       );
@@ -594,7 +563,7 @@ void main() {
 
       // Operator tries to cancel someone else's job
       // operator role does not have cancel_any_job permission
-      final operatorContext = RbacContext(
+      const operatorContext = RbacContext(
         actorId: 'operator-1',
         role: 'operator',
       );
@@ -656,13 +625,12 @@ void main() {
     });
 
     // TC-011: runAnalysis with authorized RBAC context succeeds
-    test('TC-011: runAnalysis with authorized RBAC context succeeds',
-        () async {
+    test('TC-011: runAnalysis with authorized RBAC context succeeds', () async {
       final spec = _createSpec(specId: 'authorized-spec');
       await f.specManager.createSpec(spec);
 
       // Operator has execute permission
-      final operatorContext = RbacContext(
+      const operatorContext = RbacContext(
         actorId: 'op-1',
         role: 'operator',
       );
@@ -693,7 +661,7 @@ void main() {
     // TC-013: cancelJob on non-existent job with RBAC throws job.not_found
     test('TC-013: cancelJob on non-existent job with RBAC throws job.not_found',
         () async {
-      final ctx = RbacContext(actorId: 'admin-1', role: 'admin');
+      const ctx = RbacContext(actorId: 'admin-1', role: 'admin');
 
       expect(
         () => f.engine.cancelJob('ghost-job', rbacContext: ctx),
@@ -717,7 +685,7 @@ void main() {
       );
       await f.jobManager.startJob(created.jobId);
 
-      final adminContext = RbacContext(
+      const adminContext = RbacContext(
         actorId: 'admin-1',
         role: 'admin',
       );
@@ -775,11 +743,14 @@ void main() {
         analysisSteps: [
           AnalysisStep(
             function: 'descriptive_stats',
-            parameters: {'columns': ['temperature']},
+            parameters: {
+              'columns': ['temperature']
+            },
           ),
         ],
         outputs: [
           AnalysisOutputDef(
+            from: 'descriptive_stats',
             type: AnalysisArtifactType.metric,
             name: 'temperature_stats',
           ),

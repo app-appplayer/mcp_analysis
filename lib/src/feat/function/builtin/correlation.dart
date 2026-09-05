@@ -9,8 +9,7 @@ class CorrelationRegressionFunction implements AnalysisFunction {
   @override
   AnalysisFunctionInfo get info => AnalysisFunctionInfo(
         functionName: 'correlation_regression',
-        description:
-            'Compute correlation coefficient and linear regression',
+        description: 'Compute correlation coefficient and linear regression',
         parameters: {
           'method': AnalysisParameterSchema(
             name: 'method',
@@ -27,6 +26,28 @@ class CorrelationRegressionFunction implements AnalysisFunction {
             name: 'yColumn',
             type: 'string',
             description: 'Y variable column',
+          ),
+        },
+        results: const {
+          'correlation': AnalysisResultSchema(
+            name: 'correlation',
+            type: 'number',
+            description: 'Correlation coefficient',
+          ),
+          'slope': AnalysisResultSchema(
+            name: 'slope',
+            type: 'number',
+            description: 'Regression slope',
+          ),
+          'intercept': AnalysisResultSchema(
+            name: 'intercept',
+            type: 'number',
+            description: 'Regression intercept',
+          ),
+          'r_squared': AnalysisResultSchema(
+            name: 'r_squared',
+            type: 'number',
+            description: 'Coefficient of determination',
           ),
         },
         supportedDataTypes: ['double', 'int'],

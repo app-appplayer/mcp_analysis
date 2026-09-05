@@ -5,6 +5,55 @@ import 'package:mcp_bundle/ports.dart';
 
 import 'datasource_registry.dart';
 
+/// Scheme, host and path of [rawUrl], with the query and any userinfo
+/// left out.
+///
+/// A credential travels in a query string as often as in a header
+/// (`?api_key=…`), and userinfo carries one by definition. Parameter names
+/// are enough to tell one request from another.
+Map<String, dynamic> _redactUrl(String rawUrl) {
+  final uri = Uri.tryParse(rawUrl);
+  if (uri == null) return {'urlLength': rawUrl.length};
+  final safe = Uri(
+    scheme: uri.scheme.isEmpty ? null : uri.scheme,
+    host: uri.host.isEmpty ? null : uri.host,
+    port: uri.hasPort ? uri.port : null,
+    path: uri.path,
+  );
+  return {
+    'url': safe.toString(),
+    if (uri.hasQuery && uri.queryParameters.isNotEmpty)
+      'queryNames': uri.queryParameters.keys.toList(),
+    if (uri.userInfo.isNotEmpty) 'hasUserInfo': true,
+  };
+}
+
+/// What an error may say about an API source request.
+///
+/// The query is the source's whole configuration, headers included, and an
+/// error's details are stored on the job and read back through
+/// `analysis.get_job`. Echoing the query there writes whatever
+/// `Authorization` the spec carries into the job record. Header names are
+/// enough to diagnose with; the values never leave the request.
+Map<String, dynamic> _safeQueryDetails(String queryJson) {
+  try {
+    final decoded = jsonDecode(queryJson);
+    if (decoded is! Map<String, dynamic>) {
+      return {'queryLength': queryJson.length};
+    }
+    final headers = decoded['headers'];
+    final rawUrl = decoded['url'];
+    return {
+      if (rawUrl is String) ..._redactUrl(rawUrl),
+      if (decoded['method'] is String) 'method': decoded['method'],
+      if (headers is Map && headers.isNotEmpty)
+        'headerNames': headers.keys.map((k) => k.toString()).toList(),
+    };
+  } on FormatException {
+    return {'queryLength': queryJson.length};
+  }
+}
+
 // ============================================================================
 // HTTP Client Port (injected interface for HTTP calls)
 // ============================================================================
@@ -23,15 +72,14 @@ abstract class HttpClientPort {
 
 /// Immutable HTTP response data returned from HttpClientPort.
 class HttpResponseData {
-  final int statusCode;
-  final Map<String, String> headers;
-  final String body;
-
   const HttpResponseData({
     required this.statusCode,
     this.headers = const {},
     required this.body,
   });
+  final int statusCode;
+  final Map<String, String> headers;
+  final String body;
 }
 
 // ============================================================================
@@ -40,13 +88,6 @@ class HttpResponseData {
 
 /// Configuration for an API data source request.
 class ApiConfig {
-  final String url;
-  final String method;
-  final Map<String, String> headers;
-  final Map<String, String> responseMapping;
-  final String? dataArrayPath;
-  final Duration timeout;
-
   const ApiConfig({
     required this.url,
     this.method = 'GET',
@@ -65,7 +106,7 @@ class ApiConfig {
       throw AnalysisError(
         code: 'source.schema_mismatch',
         message: 'Invalid API config JSON: $e',
-        details: {'query': queryJson},
+        details: _safeQueryDetails(queryJson),
       );
     }
 
@@ -73,7 +114,7 @@ class ApiConfig {
       throw AnalysisError(
         code: 'source.schema_mismatch',
         message: 'API config must be a JSON object',
-        details: {'query': queryJson},
+        details: _safeQueryDetails(queryJson),
       );
     }
 
@@ -82,7 +123,7 @@ class ApiConfig {
       throw AnalysisError(
         code: 'source.schema_mismatch',
         message: 'API config requires a non-empty "url" field',
-        details: {'query': queryJson},
+        details: _safeQueryDetails(queryJson),
       );
     }
 
@@ -115,6 +156,12 @@ class ApiConfig {
           : const Duration(seconds: 30),
     );
   }
+  final String url;
+  final String method;
+  final Map<String, String> headers;
+  final Map<String, String> responseMapping;
+  final String? dataArrayPath;
+  final Duration timeout;
 }
 
 // ============================================================================
@@ -126,13 +173,12 @@ class ApiConfig {
 /// Parses query JSON into ApiConfig, executes HTTP calls via HttpClientPort,
 /// and maps the response to AnalysisDataSet using responseMapping.
 class ApiSourceAdapter extends DataSourceAdapter {
-  final HttpClientPort _httpClient;
-  final Duration queryTimeout;
-
   ApiSourceAdapter({
     required HttpClientPort httpClient,
     this.queryTimeout = const Duration(seconds: 30),
   }) : _httpClient = httpClient;
+  final HttpClientPort _httpClient;
+  final Duration queryTimeout;
 
   @override
   AnalysisSourceType get sourceType => AnalysisSourceType.external;
@@ -157,14 +203,17 @@ class ApiSourceAdapter extends DataSourceAdapter {
       throw AnalysisError(
         code: 'source.timeout',
         message: 'API query timed out after ${config.timeout.inSeconds}s',
-        details: {'query': query, 'timeoutSeconds': config.timeout.inSeconds},
+        details: {
+          ..._safeQueryDetails(query),
+          'timeoutSeconds': config.timeout.inSeconds,
+        },
       );
     } catch (e) {
       if (e is AnalysisError) rethrow;
       throw AnalysisError(
         code: 'source.unavailable',
         message: 'API connection failed: $e',
-        details: {'query': query},
+        details: _safeQueryDetails(query),
       );
     }
 
@@ -179,7 +228,7 @@ class ApiSourceAdapter extends DataSourceAdapter {
       throw AnalysisError(
         code: 'source.schema_mismatch',
         message: 'Invalid JSON response from API: $e',
-        details: {'query': query},
+        details: _safeQueryDetails(query),
       );
     }
 
@@ -218,14 +267,14 @@ class ApiSourceAdapter extends DataSourceAdapter {
       throw AnalysisError(
         code: 'source.unauthorized',
         message: 'API access denied with status $statusCode',
-        details: {'query': query, 'statusCode': statusCode},
+        details: {..._safeQueryDetails(query), 'statusCode': statusCode},
       );
     }
 
     throw AnalysisError(
       code: 'source.unavailable',
       message: 'API returned error status $statusCode',
-      details: {'query': query, 'statusCode': statusCode},
+      details: {..._safeQueryDetails(query), 'statusCode': statusCode},
     );
   }
 
@@ -240,8 +289,7 @@ class ApiSourceAdapter extends DataSourceAdapter {
       if (body is List) return body;
       throw AnalysisError(
         code: 'source.schema_mismatch',
-        message:
-            'Response is not an array and no dataArrayPath specified',
+        message: 'Response is not an array and no dataArrayPath specified',
       );
     }
 
@@ -271,8 +319,7 @@ class ApiSourceAdapter extends DataSourceAdapter {
     if (current is! List) {
       throw AnalysisError(
         code: 'source.schema_mismatch',
-        message:
-            'Value at path "$dataArrayPath" is not an array',
+        message: 'Value at path "$dataArrayPath" is not an array',
         details: {'dataArrayPath': dataArrayPath},
       );
     }

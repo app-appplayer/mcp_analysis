@@ -4,6 +4,7 @@ import '../feat/alert/alert_evaluator.dart';
 import '../feat/alert/alert_publisher.dart';
 import '../feat/datasource/datasource_registry.dart';
 import '../feat/datasource/synthetic_source.dart';
+import '../feat/datasource/upload_source.dart';
 import '../feat/domain/domain_builtin.dart';
 import '../feat/function/builtin/anomaly_detect.dart';
 import '../feat/function/builtin/classification.dart';
@@ -86,19 +87,17 @@ List<AnalysisFunction> standardBuiltinFunctions() => <AnalysisFunction>[
 /// Public API entry point. Implements AnalysisPort by delegating
 /// to internal modules. Pure facade — no business logic.
 class AnalysisPortAdapter implements AnalysisPort {
-  final SpecManager _specManager;
-  final ExecutionEngine _executionEngine;
-  final ArtifactStore _artifactStore;
-  final DataSourceRegistry _dataSourceRegistry;
-  final AlertEvaluator _alertEvaluator;
-
   AnalysisPortAdapter({
     required SpecManager specManager,
     required ExecutionEngine executionEngine,
     required ArtifactStore artifactStore,
     required DataSourceRegistry dataSourceRegistry,
     required AlertEvaluator alertEvaluator,
-  })  : _specManager = specManager,
+    FunctionCatalog? functionCatalog,
+    JobManager? jobManager,
+  })  : _functionCatalog = functionCatalog,
+        _jobManager = jobManager,
+        _specManager = specManager,
         _executionEngine = executionEngine,
         _artifactStore = artifactStore,
         _dataSourceRegistry = dataSourceRegistry,
@@ -118,18 +117,29 @@ class AnalysisPortAdapter implements AnalysisPort {
     MetricPort? metricPort,
     List<AnalysisFunction> extraFunctions = const [],
   }) {
+    final catalog = FunctionCatalog();
     final specManager = SpecManager(
       storage: _InMemoryStorage<AnalysisSpec>(),
       validator: SpecValidator(),
       parameterResolver: ParameterResolver(),
+      // Read through the catalog rather than a snapshot: functions
+      // registered after construction are checkable too.
+      declaredResultFields: () => {
+        for (final info in catalog.getAll())
+          info.functionName: info.results.keys.toSet(),
+      },
+      versionStorage: _InMemoryStorage<AnalysisSpec>(),
     );
     final jobManager = JobManager(storage: _InMemoryStorage<AnalysisJob>());
     final artifactStore =
         ArtifactStore(storage: _InMemoryStorage<AnalysisArtifact>());
+    // Both adapters that need nothing from the host. `io` needs a stream
+    // port, `external` an HTTP client and `factgraph` a facts port, so
+    // those stay the host's to register through [dataSourceRegistry].
     final dataSourceRegistry = DataSourceRegistry()
-      ..register(AnalysisSourceType.synthetic, SyntheticSourceAdapter());
+      ..register(AnalysisSourceType.synthetic, SyntheticSourceAdapter())
+      ..register(AnalysisSourceType.upload, UploadSourceAdapter());
 
-    final catalog = FunctionCatalog();
     final functionDispatcher = FunctionDispatcher(catalog: catalog);
     for (final fn in [...standardBuiltinFunctions(), ...extraFunctions]) {
       catalog.register(fn.info);
@@ -190,8 +200,34 @@ class AnalysisPortAdapter implements AnalysisPort {
       artifactStore: artifactStore,
       dataSourceRegistry: dataSourceRegistry,
       alertEvaluator: alertEvaluator,
+      functionCatalog: catalog,
+      jobManager: jobManager,
     );
   }
+  final SpecManager _specManager;
+  final ExecutionEngine _executionEngine;
+  final ArtifactStore _artifactStore;
+  final DataSourceRegistry _dataSourceRegistry;
+  final AlertEvaluator _alertEvaluator;
+
+  /// Catalog behind [listFunctions]. Absent when a host assembles the
+  /// adapter without one; the port then reports an empty catalog rather
+  /// than pretending the engine has no functions.
+  final FunctionCatalog? _functionCatalog;
+
+  /// Job store behind [listJobs].
+  final JobManager? _jobManager;
+
+  /// The port's own translation of an actor into the governance context
+  /// the engine has always accepted. Callers had no way to supply one, so
+  /// role checks never evaluated and every audit record read `system`.
+  static RbacContext? _context(AnalysisActor? actor) => actor == null
+      ? null
+      : RbacContext(
+          actorId: actor.id,
+          role: actor.role,
+          groups: actor.groups,
+        );
 
   /// The engine's data source registry — register additional adapters
   /// (io / api / upload / factgraph) on an [AnalysisPortAdapter.inMemory]
@@ -203,11 +239,22 @@ class AnalysisPortAdapter implements AnalysisPort {
     return _specManager.getSpec(specId);
   }
 
+  /// Retrieve the exact version an artifact's provenance names.
+  Future<AnalysisSpec?> getSpecVersion(String specId, String version) {
+    return _specManager.getSpecVersion(specId, version);
+  }
+
+  /// Versions of [specId] that can still be retrieved.
+  Future<List<String>> listSpecVersions(String specId) {
+    return _specManager.listSpecVersions(specId);
+  }
+
   @override
   Future<List<AnalysisSpec>> listSpecs({
     String? search,
     int? limit,
     int? offset,
+    AnalysisActor? actor,
   }) {
     return _specManager.listSpecs(
       search: search,
@@ -217,13 +264,39 @@ class AnalysisPortAdapter implements AnalysisPort {
   }
 
   @override
-  Future<AnalysisSpec> createSpec(AnalysisSpec spec) {
+  Future<AnalysisSpec> createSpec(AnalysisSpec spec, {AnalysisActor? actor}) {
     return _specManager.createSpec(spec);
   }
 
   @override
-  Future<AnalysisSpec> updateSpec(String specId, AnalysisSpec spec) {
+  Future<AnalysisSpec> updateSpec(
+    String specId,
+    AnalysisSpec spec, {
+    AnalysisActor? actor,
+  }) {
     return _specManager.updateSpec(specId, spec);
+  }
+
+  @override
+  Future<void> deleteSpec(String specId, {AnalysisActor? actor}) {
+    return _specManager.deleteSpec(specId);
+  }
+
+  @override
+  Future<List<AnalysisFunctionInfo>> listFunctions({
+    String? search,
+    AnalysisActor? actor,
+  }) async {
+    final catalog = _functionCatalog;
+    if (catalog == null) return const [];
+    if (search == null || search.isEmpty) return catalog.getAll();
+    final query = search.toLowerCase();
+    return catalog
+        .getAll()
+        .where((f) =>
+            f.functionName.toLowerCase().contains(query) ||
+            f.description.toLowerCase().contains(query))
+        .toList();
   }
 
   @override
@@ -232,18 +305,43 @@ class AnalysisPortAdapter implements AnalysisPort {
     required Map<String, dynamic> parameters,
     AnalysisExecutionMode mode = AnalysisExecutionMode.batch,
     AnalysisTimeRange? timeRange,
+    AnalysisActor? actor,
   }) {
     return _executionEngine.runAnalysis(
       specId: specId,
       parameters: parameters,
       mode: mode,
       timeRange: timeRange,
+      rbacContext: _context(actor),
     );
   }
 
   @override
-  Future<AnalysisJob?> getJob(String jobId) {
+  Future<AnalysisJob?> getJob(String jobId, {AnalysisActor? actor}) {
     return _executionEngine.getJob(jobId);
+  }
+
+  @override
+  Future<List<AnalysisJob>> listJobs({
+    String? specId,
+    AnalysisJobStatus? status,
+    int? limit,
+    AnalysisActor? actor,
+  }) async {
+    final manager = _jobManager;
+    if (manager == null) return const [];
+    var jobs = await manager.listJobs();
+    jobs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (specId != null) {
+      jobs = jobs.where((j) => j.specId == specId).toList();
+    }
+    if (status != null) {
+      jobs = jobs.where((j) => j.status == status).toList();
+    }
+    if (limit != null && limit > 0 && limit < jobs.length) {
+      jobs = jobs.sublist(0, limit);
+    }
+    return jobs;
   }
 
   @override
@@ -254,6 +352,7 @@ class AnalysisPortAdapter implements AnalysisPort {
     List<String>? tags,
     AnalysisTimeRange? timeRange,
     int? limit,
+    AnalysisActor? actor,
   }) {
     return _artifactStore.query(
       jobId: jobId,
@@ -265,13 +364,16 @@ class AnalysisPortAdapter implements AnalysisPort {
     );
   }
 
-  /// Cancel a running Job.
-  Future<AnalysisJob> cancelJob(String jobId) async {
-    return _executionEngine.cancelJob(jobId);
+  @override
+  Future<AnalysisJob> cancelJob(String jobId, {AnalysisActor? actor}) async {
+    return _executionEngine.cancelJob(jobId, rbacContext: _context(actor));
   }
 
   @override
-  Future<AnalysisAlert> evaluateAlert(String alertRuleId) async {
+  Future<AnalysisAlert> evaluateAlert(
+    String alertRuleId, {
+    AnalysisActor? actor,
+  }) async {
     // 1. Lookup the AlertRule artifact by ID
     final artifact = await _artifactStore.get(alertRuleId);
     if (artifact == null || artifact is! AnalysisAlertRuleArtifact) {
@@ -324,7 +426,6 @@ class AnalysisPortAdapter implements AnalysisPort {
     return _alertEvaluator.evaluate(rule, currentData);
   }
 }
-
 
 /// Trivial in-memory [StoragePort] backing [AnalysisPortAdapter.inMemory].
 class _InMemoryStorage<T> implements StoragePort<T> {

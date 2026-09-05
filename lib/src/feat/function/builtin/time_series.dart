@@ -27,6 +27,29 @@ class TimeSeriesFunction implements AnalysisFunction {
             description: 'Window size for moving average',
           ),
         },
+        results: const {
+          'moving_averages': AnalysisResultSchema(
+            name: 'moving_averages',
+            type: 'array',
+            itemType: 'number',
+            description: 'Moving average series',
+          ),
+          'windowSize': AnalysisResultSchema(
+            name: 'windowSize',
+            type: 'number',
+            description: 'Averaging window in samples',
+          ),
+          'slope': AnalysisResultSchema(
+            name: 'slope',
+            type: 'number',
+            description: 'Trend slope',
+          ),
+          'intercept': AnalysisResultSchema(
+            name: 'intercept',
+            type: 'number',
+            description: 'Trend intercept',
+          ),
+        },
         supportedDataTypes: ['double', 'int'],
       );
 
@@ -47,8 +70,8 @@ class TimeSeriesFunction implements AnalysisFunction {
 
     final values = data.rows
         .map((r) => r[column])
-        .where((v) => v is num)
-        .map((v) => (v as num).toDouble())
+        .whereType<num>()
+        .map((v) => (v).toDouble())
         .toList();
 
     final results = <String, dynamic>{};

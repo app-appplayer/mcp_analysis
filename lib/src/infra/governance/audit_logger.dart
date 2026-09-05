@@ -2,15 +2,6 @@ import 'package:mcp_bundle/ports.dart';
 
 /// Audit log entry.
 class AuditRecord {
-  final String recordId;
-  final String actorId;
-  final String action; // execute, create_spec, update_spec
-  final String? specId;
-  final String? jobId;
-  final AnalysisTimeRange? inputRange;
-  final Map<String, dynamic>? parameters;
-  final DateTime timestamp;
-
   const AuditRecord({
     required this.recordId,
     required this.actorId,
@@ -21,6 +12,14 @@ class AuditRecord {
     this.parameters,
     required this.timestamp,
   });
+  final String recordId;
+  final String actorId;
+  final String action; // execute, create_spec, update_spec
+  final String? specId;
+  final String? jobId;
+  final AnalysisTimeRange? inputRange;
+  final Map<String, dynamic>? parameters;
+  final DateTime timestamp;
 
   Map<String, dynamic> toJson() => {
         'recordId': recordId,
@@ -36,10 +35,9 @@ class AuditRecord {
 
 /// Records audit entries for governance compliance.
 class AuditLogger {
+  AuditLogger({required StoragePort<AuditRecord> storage}) : _storage = storage;
   final StoragePort<AuditRecord> _storage;
   int _counter = 0;
-
-  AuditLogger({required StoragePort<AuditRecord> storage}) : _storage = storage;
 
   /// Record an audit entry for a Job execution.
   /// Returns [AnalysisError] with code `governance.audit_failed` on failure,

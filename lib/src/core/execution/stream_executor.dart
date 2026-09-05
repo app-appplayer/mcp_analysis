@@ -15,14 +15,6 @@ import 'step_logger.dart';
 
 /// Executes analysis in streaming mode against real-time data.
 class StreamExecutor {
-  final DataSourceRegistry _dataSourceRegistry;
-  final TransformPipeline _transformPipeline;
-  final ArtifactBuilder _artifactBuilder;
-  final ArtifactStore _artifactStore;
-  final ProvenanceTracker _provenanceTracker;
-  final AlertEvaluator _alertEvaluator;
-  final JobManager _jobManager;
-
   StreamExecutor({
     required DataSourceRegistry dataSourceRegistry,
     required TransformPipeline transformPipeline,
@@ -38,6 +30,13 @@ class StreamExecutor {
         _provenanceTracker = provenanceTracker,
         _alertEvaluator = alertEvaluator,
         _jobManager = jobManager;
+  final DataSourceRegistry _dataSourceRegistry;
+  final TransformPipeline _transformPipeline;
+  final ArtifactBuilder _artifactBuilder;
+  final ArtifactStore _artifactStore;
+  final ProvenanceTracker _provenanceTracker;
+  final AlertEvaluator _alertEvaluator;
+  final JobManager _jobManager;
 
   /// Execute a streaming analysis job.
   Future<AnalysisJob> execute({
@@ -67,7 +66,8 @@ class StreamExecutor {
     final windowKind = (resolvedParams['windowKind'] as String?) == 'tumbling'
         ? WindowKind.tumbling
         : WindowKind.sliding;
-    final maxWindowPoints = (resolvedParams['maxWindowPoints'] as num?)?.toInt();
+    final maxWindowPoints =
+        (resolvedParams['maxWindowPoints'] as num?)?.toInt();
     final allowedLatenessSpec = resolvedParams['allowedLateness'] as String?;
     final reorder = allowedLatenessSpec == null
         ? null
@@ -105,7 +105,10 @@ class StreamExecutor {
       // Periodic artifact emission timer
       emitTimer = Timer.periodic(emitInterval, (_) async {
         await _emitPeriodicArtifacts(
-          job, spec, windowAggregator, resolvedParams,
+          job,
+          spec,
+          windowAggregator,
+          resolvedParams,
         );
       });
 
@@ -123,10 +126,9 @@ class StreamExecutor {
           // `allowedLateness` is configured (restores event-time order for
           // out-of-order arrivals), directly otherwise.
           for (final row in dataSet.rows) {
-            final timestamp =
-                row['_timestamp'] is DateTime
-                    ? row['_timestamp'] as DateTime
-                    : DateTime.now();
+            final timestamp = row['_timestamp'] is DateTime
+                ? row['_timestamp'] as DateTime
+                : DateTime.now();
             final value = row.values.firstWhere(
               (v) => v is num,
               orElse: () => 0.0,
@@ -176,8 +178,8 @@ class StreamExecutor {
               final alertArtifact = _artifactBuilder.buildAlertRule(
                 jobId: job.jobId,
                 name: output.name,
-                condition: output.parameters?['condition'] as String? ??
-                    'value > 0',
+                condition:
+                    output.parameters?['condition'] as String? ?? 'value > 0',
                 severity: AnalysisAlertSeverity.warn,
                 provenance: provenance,
               );
@@ -200,12 +202,14 @@ class StreamExecutor {
             outputSize: 0,
             executionTime: Duration.zero,
           );
-          _jobManager.addError(job.jobId, AnalysisError(
-            code: 'stream.error',
-            message: 'Stream processing error: $error',
-            step: 'stream:error',
-            timestamp: DateTime.now(),
-          ));
+          _jobManager.addError(
+              job.jobId,
+              AnalysisError(
+                code: 'stream.error',
+                message: 'Stream processing error: $error',
+                step: 'stream:error',
+                timestamp: DateTime.now(),
+              ));
         },
         onDone: () async {
           emitTimer?.cancel();
@@ -238,7 +242,7 @@ class StreamExecutor {
       return (await _jobManager.getJob(job.jobId))!;
     } catch (e) {
       emitTimer?.cancel();
-      subscription?.cancel();
+      await subscription?.cancel();
       final failedJob = await _jobManager.failJob(
         job.jobId,
         errors: [
@@ -280,6 +284,9 @@ class StreamExecutor {
               o.type == AnalysisArtifactType.metric ||
               o.type == AnalysisArtifactType.series)
           .toList(),
+      // These four are `SpecValidator.engineSuppliedResultKeys` — the keys
+      // an output may read without a step producing them. The two lists
+      // have to say the same thing or a valid streaming spec emits nothing.
       functionResults: {
         'windowState': aggregator.state,
         'pointCount': aggregator.state.pointCount,
@@ -287,6 +294,9 @@ class StreamExecutor {
         'overflowDropped': aggregator.overflowDropped,
       },
       provenance: provenance,
+      // A periodic emission that cannot build an output records why rather
+      // than emitting a fabricated zero every interval.
+      onSkipped: (e) => _jobManager.addError(job.jobId, e),
     );
 
     if (artifacts.isNotEmpty) {
