@@ -20,12 +20,14 @@ class CorrelationRegressionFunction implements AnalysisFunction {
           'xColumn': AnalysisParameterSchema(
             name: 'xColumn',
             type: 'string',
-            description: 'X variable column',
+            description: 'X variable column (default: x)',
+            required: false,
           ),
           'yColumn': AnalysisParameterSchema(
             name: 'yColumn',
             type: 'string',
-            description: 'Y variable column',
+            description: 'Y variable column (default: y)',
+            required: false,
           ),
         },
         results: const {

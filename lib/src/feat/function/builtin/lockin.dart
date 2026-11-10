@@ -33,6 +33,7 @@ class LockinFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the samples',
+            required: false,
           ),
           'sampleRate': AnalysisParameterSchema(
             name: 'sampleRate',
@@ -49,6 +50,7 @@ class LockinFunction implements AnalysisFunction {
             type: 'number',
             description:
                 'Post-demodulation lowpass cutoff in Hz (default f_ref/10)',
+            required: false,
           ),
           'settle': AnalysisParameterSchema(
             name: 'settle',

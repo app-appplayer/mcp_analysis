@@ -25,11 +25,13 @@ class PeakDetectFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the samples',
+            required: false,
           ),
           'minHeight': AnalysisParameterSchema(
             name: 'minHeight',
             type: 'number',
             description: 'Absolute minimum peak value',
+            required: false,
           ),
           'minProminence': AnalysisParameterSchema(
             name: 'minProminence',
@@ -161,11 +163,13 @@ class ZeroCrossingFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the samples',
+            required: false,
           ),
           'sampleRate': AnalysisParameterSchema(
             name: 'sampleRate',
             type: 'number',
             description: 'Sampling rate in Hz (enables frequency estimates)',
+            required: false,
           ),
           'direction': AnalysisParameterSchema(
             name: 'direction',

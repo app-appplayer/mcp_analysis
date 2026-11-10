@@ -22,6 +22,7 @@ class FftFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the waveform samples',
+            required: false,
           ),
           'sampleRate': AnalysisParameterSchema(
             name: 'sampleRate',
@@ -169,6 +170,7 @@ class PsdWelchFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the waveform samples',
+            required: false,
           ),
           'sampleRate': AnalysisParameterSchema(
             name: 'sampleRate',
@@ -198,6 +200,7 @@ class PsdWelchFunction implements AnalysisFunction {
             type: 'array',
             description:
                 'Optional [{name, low, high}] Hz ranges → integrated power',
+            required: false,
           ),
         },
         results: const {

@@ -15,7 +15,8 @@ class DescriptiveStatsFunction implements AnalysisFunction {
           'columns': AnalysisParameterSchema(
             name: 'columns',
             type: 'array',
-            description: 'Columns to analyze',
+            description: 'Columns to analyze (default: all numeric columns)',
+            required: false,
           ),
           'percentiles': AnalysisParameterSchema(
             name: 'percentiles',

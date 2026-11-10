@@ -67,10 +67,13 @@ class FunctionDispatcher implements AnalysisFunctionPort {
       );
     }
 
-    // Validate required parameters
+    // Validate required parameters: those the function declares required,
+    // or, when it says nothing, those without a default. A parameter only
+    // some methods read is optional here; the function checks it where it
+    // needs it.
     for (final entry in functionInfo.parameters.entries) {
       final schema = entry.value;
-      if (schema.defaultValue == null && !parameters.containsKey(entry.key)) {
+      if (schema.isRequired && !parameters.containsKey(entry.key)) {
         throw AnalysisError(
           code: 'analysis.parameter_error',
           message:

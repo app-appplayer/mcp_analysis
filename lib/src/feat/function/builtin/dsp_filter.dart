@@ -26,6 +26,7 @@ class DigitalFilterFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the samples',
+            required: false,
           ),
           'type': AnalysisParameterSchema(
             name: 'type',
@@ -39,12 +40,15 @@ class DigitalFilterFunction implements AnalysisFunction {
             name: 'sampleRate',
             type: 'number',
             description: 'Sampling rate in Hz (required for biquad types)',
+            required: false,
           ),
           'cutoff': AnalysisParameterSchema(
             name: 'cutoff',
             type: 'number',
             description:
-                'Cutoff frequency in Hz (center frequency for bandpass)',
+                'Cutoff frequency in Hz (center frequency for bandpass; '
+                'required for biquad types)',
+            required: false,
           ),
           'q': AnalysisParameterSchema(
             name: 'q',

@@ -26,11 +26,13 @@ class AcfFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column to analyze',
+            required: false,
           ),
           'maxLag': AnalysisParameterSchema(
             name: 'maxLag',
             type: 'number',
             description: 'Maximum lag (default min(n/2, 500))',
+            required: false,
           ),
         },
         results: const {
@@ -142,6 +144,7 @@ class CrossCorrelationFunction implements AnalysisFunction {
             name: 'maxLag',
             type: 'number',
             description: 'Maximum |lag| (default min(n/2, 200))',
+            required: false,
           ),
         },
         results: const {
@@ -254,6 +257,7 @@ class ChangepointCusumFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column to analyze',
+            required: false,
           ),
           'threshold': AnalysisParameterSchema(
             name: 'threshold',
@@ -272,6 +276,7 @@ class ChangepointCusumFunction implements AnalysisFunction {
             type: 'number',
             description: 'Calibration window for the baseline mean/std '
                 '(default min(50, n/4); monitoring starts after it)',
+            required: false,
           ),
         },
         results: const {
@@ -376,6 +381,7 @@ class HoltWintersFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column to forecast',
+            required: false,
           ),
           'horizon': AnalysisParameterSchema(
             name: 'horizon',

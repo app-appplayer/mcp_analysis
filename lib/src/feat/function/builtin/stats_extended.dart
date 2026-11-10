@@ -32,6 +32,7 @@ class HistogramFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column to bin',
+            required: false,
           ),
           'bins': AnalysisParameterSchema(
             name: 'bins',
@@ -43,11 +44,13 @@ class HistogramFunction implements AnalysisFunction {
             name: 'min',
             type: 'number',
             description: 'Explicit lower edge (data min otherwise)',
+            required: false,
           ),
           'max': AnalysisParameterSchema(
             name: 'max',
             type: 'number',
             description: 'Explicit upper edge (data max otherwise)',
+            required: false,
           ),
         },
         results: const {
@@ -136,6 +139,7 @@ class CovarianceMatrixFunction implements AnalysisFunction {
             name: 'columns',
             type: 'array',
             description: 'Numeric columns (default: all numeric)',
+            required: false,
           ),
         },
         results: const {
@@ -232,11 +236,13 @@ class RegressionFunction implements AnalysisFunction {
             name: 'columns',
             type: 'array',
             description: '[x, y] columns (or use column= y vs index)',
+            required: false,
           ),
           'column': AnalysisParameterSchema(
             name: 'column',
             type: 'string',
             description: 'y column regressed against the sample index',
+            required: false,
           ),
           'degree': AnalysisParameterSchema(
             name: 'degree',
@@ -501,11 +507,13 @@ class InterpolateFunction implements AnalysisFunction {
             name: 'columns',
             type: 'array',
             description: '[x, y] columns (or use column= y vs index)',
+            required: false,
           ),
           'column': AnalysisParameterSchema(
             name: 'column',
             type: 'string',
             description: 'y column against the sample index',
+            required: false,
           ),
           'method': AnalysisParameterSchema(
             name: 'method',
@@ -517,6 +525,7 @@ class InterpolateFunction implements AnalysisFunction {
             name: 'queryPoints',
             type: 'array',
             description: 'x positions to evaluate (default: midpoints)',
+            required: false,
           ),
         },
         results: const {

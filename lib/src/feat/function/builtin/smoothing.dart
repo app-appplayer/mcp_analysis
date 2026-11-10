@@ -21,6 +21,7 @@ class SmoothingFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column to smooth',
+            required: false,
           ),
           'method': AnalysisParameterSchema(
             name: 'method',
@@ -38,6 +39,7 @@ class SmoothingFunction implements AnalysisFunction {
             name: 'alpha',
             type: 'number',
             description: 'EMA smoothing factor (default 2/(window+1))',
+            required: false,
           ),
           'polyOrder': AnalysisParameterSchema(
             name: 'polyOrder',
@@ -225,6 +227,7 @@ class DifferencingFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column to difference',
+            required: false,
           ),
           'order': AnalysisParameterSchema(
             name: 'order',

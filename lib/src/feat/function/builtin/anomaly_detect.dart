@@ -21,18 +21,23 @@ class AnomalyDetectFunction implements AnalysisFunction {
           'column': AnalysisParameterSchema(
             name: 'column',
             type: 'string',
-            description: 'Column to analyze',
+            description:
+                'Column to analyze (default: the first numeric column)',
+            required: false,
           ),
           'threshold': AnalysisParameterSchema(
             name: 'threshold',
             type: 'double',
-            description: 'Threshold value (for threshold method)',
+            description: 'Threshold value (threshold method only, where it is '
+                'required)',
+            required: false,
           ),
           'sensitivity': AnalysisParameterSchema(
             name: 'sensitivity',
             type: 'double',
-            defaultValue: 2.0,
-            description: 'Sensitivity factor (for zscore/iqr methods)',
+            description: 'Sensitivity factor (zscore 2.0 standard deviations, '
+                'iqr 1.5 interquartile ranges, mad 3.5 robust z when omitted)',
+            required: false,
           ),
           'alpha': AnalysisParameterSchema(
             name: 'alpha',

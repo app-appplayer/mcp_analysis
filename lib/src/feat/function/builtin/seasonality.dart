@@ -13,7 +13,9 @@ class SeasonalityFunction implements AnalysisFunction {
           'column': AnalysisParameterSchema(
             name: 'column',
             type: 'string',
-            description: 'Column to analyze',
+            description:
+                'Column to analyze (default: the first numeric column)',
+            required: false,
           ),
           'timestampColumn': AnalysisParameterSchema(
             name: 'timestampColumn',
@@ -24,7 +26,8 @@ class SeasonalityFunction implements AnalysisFunction {
           'period': AnalysisParameterSchema(
             name: 'period',
             type: 'int',
-            description: 'Seasonal period length',
+            description: 'Seasonal period length (detected when omitted)',
+            required: false,
           ),
           'method': AnalysisParameterSchema(
             name: 'method',

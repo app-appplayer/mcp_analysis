@@ -13,6 +13,7 @@ class RuleBasedClassificationFunction implements AnalysisFunction {
             name: 'rules',
             type: 'array',
             description: 'List of rules: [{column, operator, value, label}]',
+            required: false,
           ),
           'defaultLabel': AnalysisParameterSchema(
             name: 'defaultLabel',

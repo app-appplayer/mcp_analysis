@@ -26,6 +26,7 @@ class KalmanFilterFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column to filter',
+            required: false,
           ),
           'model': AnalysisParameterSchema(
             name: 'model',

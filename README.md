@@ -17,13 +17,49 @@ Analysis engine for the MCP ecosystem. Pipeline-based data analysis with pluggab
 
 ```dart
 import 'package:mcp_analysis/mcp_analysis.dart';
+import 'package:mcp_bundle/ports.dart';
 
-final engine = ExecutionEngine(
-  jobManager: JobManager(),
-  artifactStore: InMemoryArtifactStore(),
-);
+Future<void> main() async {
+  // Spec store, executors, job manager, built-in functions and the
+  // synthetic / upload sources, wired in memory.
+  final port = AnalysisPortAdapter.inMemory();
 
-final result = await engine.executeAdhoc(spec, parameters);
+  await port.createSpec(
+    AnalysisSpec(
+      specId: 'tone-stats',
+      version: '1.0.0',
+      inputSources: [
+        AnalysisInputSource(
+          sourceType: AnalysisSourceType.synthetic,
+          query: '{"samples":64,"sampleRate":32,"seed":1,'
+              '"components":[{"kind":"sine","amplitude":1,"frequency":4}]}',
+        ),
+      ],
+      analysisSteps: [
+        AnalysisStep(
+          id: 'stats',
+          function: 'descriptive_stats',
+          parameters: {
+            'columns': ['value'],
+          },
+        ),
+      ],
+      outputs: [
+        AnalysisOutputDef(
+          from: 'stats',
+          type: AnalysisArtifactType.summary,
+          name: 'stats',
+        ),
+      ],
+      metadata: const AnalysisSpecMetadata(description: 'Tone statistics'),
+    ),
+  );
+
+  final job = await port.runAnalysis(specId: 'tone-stats', parameters: {});
+  final artifacts = await port.getArtifacts(jobId: job.jobId);
+  // job.status is completed; artifacts holds the summary artifact.
+  assert(job.status == AnalysisJobStatus.completed && artifacts.isNotEmpty);
+}
 ```
 
 ## Support

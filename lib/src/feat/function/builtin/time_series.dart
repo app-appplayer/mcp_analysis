@@ -18,7 +18,9 @@ class TimeSeriesFunction implements AnalysisFunction {
           'column': AnalysisParameterSchema(
             name: 'column',
             type: 'string',
-            description: 'Column to analyze',
+            description:
+                'Column to analyze (default: the first numeric column)',
+            required: false,
           ),
           'windowSize': AnalysisParameterSchema(
             name: 'windowSize',

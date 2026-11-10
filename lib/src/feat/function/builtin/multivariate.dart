@@ -24,11 +24,13 @@ class PcaFunction implements AnalysisFunction {
             name: 'columns',
             type: 'array',
             description: 'Numeric columns (default: all numeric)',
+            required: false,
           ),
           'components': AnalysisParameterSchema(
             name: 'components',
             type: 'number',
             description: 'Components to keep (default: all)',
+            required: false,
           ),
           'standardize': AnalysisParameterSchema(
             name: 'standardize',
@@ -238,12 +240,14 @@ class LombScargleFunction implements AnalysisFunction {
             name: 'minFrequency',
             type: 'number',
             description: 'Lowest frequency to scan (default 1/span)',
+            required: false,
           ),
           'maxFrequency': AnalysisParameterSchema(
             name: 'maxFrequency',
             type: 'number',
             description:
                 'Highest frequency (default pseudo-Nyquist n/(2·span))',
+            required: false,
           ),
           'frequencySteps': AnalysisParameterSchema(
             name: 'frequencySteps',

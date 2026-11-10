@@ -22,6 +22,7 @@ class SpectrogramFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the waveform samples',
+            required: false,
           ),
           'sampleRate': AnalysisParameterSchema(
             name: 'sampleRate',
@@ -150,6 +151,7 @@ class CepstrumFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the waveform samples',
+            required: false,
           ),
           'sampleRate': AnalysisParameterSchema(
             name: 'sampleRate',
@@ -263,6 +265,7 @@ class HarmonicsFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the waveform samples',
+            required: false,
           ),
           'sampleRate': AnalysisParameterSchema(
             name: 'sampleRate',
@@ -273,6 +276,7 @@ class HarmonicsFunction implements AnalysisFunction {
             name: 'fundamental',
             type: 'number',
             description: 'Fundamental frequency in Hz (auto when omitted)',
+            required: false,
           ),
           'harmonicCount': AnalysisParameterSchema(
             name: 'harmonicCount',

@@ -24,6 +24,7 @@ class ResampleFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the samples',
+            required: false,
           ),
           'mode': AnalysisParameterSchema(
             name: 'mode',
@@ -40,12 +41,16 @@ class ResampleFunction implements AnalysisFunction {
           'sourceRate': AnalysisParameterSchema(
             name: 'sourceRate',
             type: 'number',
-            description: 'Source rate in Hz (linear mode)',
+            description:
+                'Source rate in Hz (linear mode, where it is required)',
+            required: false,
           ),
           'targetRate': AnalysisParameterSchema(
             name: 'targetRate',
             type: 'number',
-            description: 'Target rate in Hz (linear mode)',
+            description:
+                'Target rate in Hz (linear mode, where it is required)',
+            required: false,
           ),
         },
         results: const {
@@ -155,6 +160,7 @@ class EnvelopeFunction implements AnalysisFunction {
             name: 'column',
             type: 'string',
             description: 'Numeric column holding the samples',
+            required: false,
           ),
           'mode': AnalysisParameterSchema(
             name: 'mode',

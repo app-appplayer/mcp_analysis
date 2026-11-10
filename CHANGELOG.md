@@ -1,3 +1,16 @@
+## 0.2.1 - 2026-11-10
+
+### Fixed
+- A parameter only some methods of a function read no longer blocks the others: `anomaly_detect` with `mad`, `zscore`, `iqr` or `ewma` no longer requires `threshold`; `digital_filter` `moving_average` / `median` no longer require `sampleRate` and `cutoff`; `resample` `decimate` no longer requires `sourceRate` and `targetRate`. The function still refuses the method that needs the parameter when it is missing.
+- Parameters a function fills itself (the first numeric column, a detected period, a computed default such as `maxLag`, `alpha`, `minFrequency`, the histogram edges, the interpolation points) can be left out; the dispatcher refused them. 52 parameters across the built-in functions are declared `required: false`.
+- `anomaly_detect.sensitivity` no longer declares a default of 2.0: the default depends on the method (zscore 2.0, iqr 1.5, mad 3.5), as its description now says.
+
+### Changed (dependency)
+- `mcp_bundle` `^0.4.14`: the dispatcher reads `AnalysisParameterSchema.isRequired`.
+
+### Documentation
+- The README quick start uses the current API (`AnalysisPortAdapter.inMemory`, `createSpec`, `runAnalysis`); the earlier one called constructors that no longer exist.
+
 ## 0.2.0 - 2026-09-01
 
 ### Added
